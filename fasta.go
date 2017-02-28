@@ -59,10 +59,10 @@ func load_srna_file_go(file_names chan string, srna_maps chan map[string]float64
 	srna_map := make(map[string]float64)
 	var count float64
 	var total_count float64
-
-	f, err := os.Open(<-file_names)
+	file_name := <-file_names
+	f, err := os.Open(file_name)
 	if err !=nil {
-		fmt.Println("\nCan't load collapsed read file")
+		fmt.Println("\nCan't load collapsed read file " + file_name)
 		os.Exit(1)
 	}
 
@@ -71,12 +71,12 @@ func load_srna_file_go(file_names chan string, srna_maps chan map[string]float64
 	for scanner.Scan() {
 		fasta_line := scanner.Text()
 		if seq_next==true && len(fasta_line)==0 {
-			fmt.Println("Read file format probem - blank line between header and sequence")
+			fmt.Println("Read file format problem - blank line between header and sequence in " + file_name)
 			error_shutdown()
 		}
 		if strings.HasPrefix(fasta_line,">") {
 			header_line := strings.Split(fasta_line, "-")
-			err := check_header_error(header_line)
+			err := check_header_error(header_line, file_name)
 			if err != nil{
 				error_shutdown()
 			}
@@ -93,13 +93,13 @@ func load_srna_file_go(file_names chan string, srna_maps chan map[string]float64
 	}
 	srna_maps <- srna_map
 	t2 := time.Since(t1)
-	fmt.Println("Single read file loaded: ", t2)
+	fmt.Println("Single read file "+ file_name+" loaded: ", t2)
 	wg.Done()
 }
 
-func check_header_error(header_line []string) error {
+func check_header_error(header_line []string, file_name string) error {
 	if len(header_line)<2 || len(header_line)>2 {
-		return errors.New("\nRead file incorrectly formatted")
+		return errors.New("\n"+ file_name+" is incorrectly formatted")
 	}
 	return nil
 }
@@ -165,7 +165,7 @@ func RefLoad(ref_file string) []*header_ref {
 
 	f, err := os.Open(ref_file)
 	if err != nil {
-		fmt.Println("Problem loading fasta reference file.")
+		fmt.Println("Problem opening fasta reference file "+ref_file)
 		error_shutdown()
 	}
 	scanner := bufio.NewScanner(f)
@@ -190,22 +190,23 @@ func RefLoad(ref_file string) []*header_ref {
 	return ref_slice
 }
 
-func check_dna(line string){
-	dna := map[rune]bool {
-		'A':true,
-		'T':true,
-		'C':true,
-		'G':true,
-		'N':true,
-	}
-	runes := []rune(line)
-	for i:=0;i<=len(runes)-1;i++{
-		if _, ok := dna[runes[i]]; ok {
-			continue
-		} else {
-			fmt.Println("\nNon-DNA character in reference")
-			fmt.Println()
-			error_shutdown()
-		}
-	}
-}
+
+//func check_dna(line string){
+//	dna := map[rune]bool {
+//		'A':true,
+//		'T':true,
+//		'C':true,
+//		'G':true,
+//		'N':true,
+//	}
+//	runes := []rune(line)
+//	for i:=0;i<=len(runes)-1;i++{
+//		if _, ok := dna[runes[i]]; ok {
+//			continue
+//		} else {
+//			fmt.Println("\nNon-DNA character in reference")
+//			fmt.Println()
+//			error_shutdown()
+//		}
+//	}
+//}
