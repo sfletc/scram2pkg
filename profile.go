@@ -31,11 +31,11 @@ func (slice single_alignments) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
 }
 
-//DenNoSplit takes and alignment map and a sequence map as an input.  It returns a map of single alignments
+//ProfileNoSplit takes and alignment map and a sequence map as an input.  It returns a map of single alignments
 //with a reference header as key and a single alignments struct as value.  Each single alignments struct is comprised of
 //single_alignment structs (read seq, position, count, se).  The count for each read alignment is NOT split by the
 //number of times a read aligns.
-func DenNoSplit(alignment_map map[string]map[string][]int, seq_map map[string]*mean_se) map[string]*single_alignments {
+func ProfileNoSplit(alignment_map map[string]map[string][]int, seq_map map[string]*mean_se) map[string]*single_alignments {
 	//switch to concurrent once functional
 	t1 := time.Now()
 	den_alignments_map := make(map[string]*single_alignments)
@@ -64,11 +64,11 @@ func DenNoSplit(alignment_map map[string]map[string][]int, seq_map map[string]*m
 	return den_alignments_map
 }
 
-//DenSplit takes and alignment map and a sequence map as an input.  It returns a map of single alignments
+//ProfileSplit takes and alignment map and a sequence map as an input.  It returns a map of single alignments
 //with a reference header as key and a single alignments struct as value.  Each single alignments struct is comprised of
 //single_alignment structs (read seq, position, count, se).  The count for each read alignment is split by the
 //number of times a read aligns.
-func DenSplit(alignment_map map[string]map[string][]int, seq_map map[string]*mean_se) map[string]*single_alignments {
+func ProfileSplit(alignment_map map[string]map[string][]int, seq_map map[string]*mean_se) map[string]*single_alignments {
 	t1 := time.Now()
 
 	srna_alignment_map := calc_times_read_aligns(alignment_map)
@@ -99,8 +99,8 @@ func DenSplit(alignment_map map[string]map[string][]int, seq_map map[string]*mea
 	return den_alignments_map
 }
 
-//DenToCsv writes the  den results to a csv file
-func DenToCsv(den_alignments_map map[string]*single_alignments, ref_slice []*header_ref, nt int, out_prefix string) {
+//ProfileToCsv writes the  den results to a csv file
+func ProfileToCsv(den_alignments_map map[string]*single_alignments, ref_slice []*header_ref, nt int, out_prefix string) {
 	t1 := time.Now()
 	rows := [][]string{
 		{"Header", "len", "sRNA", "Position", "Count", "Std. Err"},
