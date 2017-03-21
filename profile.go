@@ -38,7 +38,7 @@ func (slice single_alignments) Swap(i, j int) {
 func ProfileNoSplit(alignment_map map[string]map[string][]int, seq_map map[string]*mean_se) map[string]*single_alignments {
 	//switch to concurrent once functional
 	t1 := time.Now()
-	den_alignments_map := make(map[string]*single_alignments)
+	profile_alignments_map := make(map[string]*single_alignments)
 	for header, alignments := range alignment_map {
 		var combined_alignments single_alignments
 		for srna, positions := range alignments {
@@ -57,11 +57,11 @@ func ProfileNoSplit(alignment_map map[string]map[string][]int, seq_map map[strin
 			}
 		}
 		sort.Sort(combined_alignments)
-		den_alignments_map[header] = &combined_alignments
+		profile_alignments_map[header] = &combined_alignments
 	}
 	t2 := time.Since(t1)
 	fmt.Println("Alignments processed: ", t2)
-	return den_alignments_map
+	return profile_alignments_map
 }
 
 //ProfileSplit takes and alignment map and a sequence map as an input.  It returns a map of single alignments
@@ -72,7 +72,7 @@ func ProfileSplit(alignment_map map[string]map[string][]int, seq_map map[string]
 	t1 := time.Now()
 
 	srna_alignment_map := calc_times_read_aligns(alignment_map)
-	den_alignments_map := make(map[string]*single_alignments)
+	profile_alignments_map := make(map[string]*single_alignments)
 	for header, alignments := range alignment_map {
 		var combined_alignments single_alignments
 		for srna, positions := range alignments {
@@ -92,21 +92,21 @@ func ProfileSplit(alignment_map map[string]map[string][]int, seq_map map[string]
 			}
 		}
 		sort.Sort(combined_alignments)
-		den_alignments_map[header] = &combined_alignments
+		profile_alignments_map[header] = &combined_alignments
 	}
 	t2 := time.Since(t1)
 	fmt.Println("Alignments processed: ", t2)
-	return den_alignments_map
+	return profile_alignments_map
 }
 
 //ProfileToCsv writes the  den results to a csv file
-func ProfileToCsv(den_alignments_map map[string]*single_alignments, ref_slice []*header_ref, nt int, out_prefix string) {
+func ProfileToCsv(profile_alignments_map map[string]*single_alignments, ref_slice []*header_ref, nt int, out_prefix string) {
 	t1 := time.Now()
 	rows := [][]string{
 		{"Header", "len", "sRNA", "Position", "Count", "Std. Err"},
 	}
 	for _, ref := range ref_slice {
-		if alignments, ok := den_alignments_map[ref.header]; ok {
+		if alignments, ok := profile_alignments_map[ref.header]; ok {
 
 			for _, alignment := range *alignments {
 				row := []string{ref.header, strconv.Itoa(len(ref.seq)),

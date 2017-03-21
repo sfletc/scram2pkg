@@ -94,7 +94,6 @@ func TestRefLoad(t *testing.T) {
 			t.Error("Seqs dont't match")
 		}
 	}
-
 }
 
-
+//func splitFwdRvs(t *testing.T)
