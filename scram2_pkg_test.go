@@ -62,7 +62,7 @@ func TestSeqLoad_multi(t *testing.T) {
 
 }
 
-//func TestSeqLoad_baf_format(t *testing.T) {
+//func TestSeqLoad_bad_format(t *testing.T) {
 //	var seq_files []string
 //	seq_files = append(seq_files,"./test_data/test_seq_3_badformat.fa")
 //	test_seq := SeqLoad(seq_files,18,32,1.0)
@@ -96,4 +96,29 @@ func TestRefLoad(t *testing.T) {
 	}
 }
 
-//func splitFwdRvs(t *testing.T)
+
+func TestAlign(t *testing.T){
+	test_ref := RefLoad("./test_data/test_ref_align.fa")
+
+	var seq_files []string
+	seq_files = append(seq_files,"./test_data/test_seq_1.fa")
+	test_seq := SeqLoad(seq_files,18,32,1.0)
+	test_align := AlignReads(test_seq,test_ref, 24)
+	pos_1 := []int{1,2}
+	single_align_1 := map[string][]int{"AAAAAAAAAAAAAAAAAAAAAAAA":pos_1}
+	pos_2 := []int{1}
+	pos_3 := []int{26}
+	single_align_2 := map[string][]int{"GGGGGGGGGGGGGGGGGGGGGGGG":pos_2,"AAAAAAAAAAAAAAAAAAAAAAAA":pos_3}
+	pos_4 := []int{-2,-1}
+	single_align_3 := map[string][]int{"AAAAAAAAAAAAAAAAAAAAAAAA":pos_4}
+	should_be := map[string]map[string][]int{"ref_1":single_align_1, "ref_2":single_align_2, "ref_3":single_align_3}
+	eq :=reflect.DeepEqual(test_align,should_be)
+	if eq == false {
+		t.Error("Alignments are not equal")
+	}
+
+
+
+}
+
+
