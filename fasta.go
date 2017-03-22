@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 	"errors"
+
+	"bytes"
 )
 
 func error_shutdown() {
@@ -158,10 +160,12 @@ type header_ref struct {
 
 //RefLoad loads a reference sequence DNA file (FASTA format).
 //It returns a slice of header_ref structs (individual reference header and sequence).
-//Sequence is checked to ensure is solely comprises 'A','C','G','T','N' - switch off due to issues
 func RefLoad(ref_file string) []*header_ref {
 	t1 := time.Now()
 	var ref_slice []*header_ref
+	var single_header_ref *header_ref
+	var header string
+	var refSeq bytes.Buffer
 
 	f, err := os.Open(ref_file)
 	if err != nil {
@@ -169,27 +173,27 @@ func RefLoad(ref_file string) []*header_ref {
 		error_shutdown()
 	}
 	scanner := bufio.NewScanner(f)
-	var single_header_ref *header_ref
 	for scanner.Scan() {
 		fasta_line := scanner.Text()
 		switch {
 		case strings.HasPrefix(fasta_line, ">"):
-			single_header_ref = &header_ref{fasta_line[1:], ""}
+			single_header_ref = &header_ref{header, refSeq.String()}
 			ref_slice=append(ref_slice, single_header_ref)
+			header=fasta_line[1:]
+			refSeq.Reset()
 		case len(fasta_line) != 0:
-			fasta_line = strings.ToUpper(fasta_line)
-			//check_dna(fasta_line)
-			single_header_ref.seq += fasta_line
+			refSeq.WriteString(strings.ToUpper(fasta_line))
 		}
-
 	}
- 
+	single_header_ref = &header_ref{header, refSeq.String()}
+	ref_slice=append(ref_slice, single_header_ref)
+	ref_slice=ref_slice[1:]
+
 	t2 := time.Since(t1)
 	fmt.Println("No. of reference sequences: ", len(ref_slice))
 	fmt.Println("Reference file processed: ", t2)
 	return ref_slice
 }
-
 
 //func check_dna(line string){
 //	dna := map[rune]bool {

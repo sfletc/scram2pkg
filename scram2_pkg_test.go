@@ -78,7 +78,7 @@ func TestRefLoad(t *testing.T) {
 	ref2 := &header_ref{"ref_2","GGGGGGGGGGGGGGGGGGGGGGGGTAAAAAAAAAAAAAAAAAAAAAAAAG"}
 	ref3 := &header_ref{"ref_3",""}
 	should_be = append(should_be, ref1,ref2,ref3)
-
+	fmt.Println(test_ref)
 	if len(test_ref) != len(should_be){
 		t.Error("Wrong no of refs in test_ref.fa")
 	}
