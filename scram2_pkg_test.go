@@ -16,7 +16,7 @@ import (
 func TestSeqLoad_single(t *testing.T) {
 	var seq_files []string
 	seq_files = append(seq_files,"./test_data/test_seq_1.fa")
-	test_seq := SeqLoad(seq_files, "cfa", 18,32,2.0)
+	test_seq := SeqLoad(seq_files, "cfa", "nil",18,32,2.0)
 	should_be := make(map[string]*mean_se)
 	var single_mean_se *mean_se
 	single_mean_se = &mean_se{500000.0,0.0}
@@ -33,8 +33,8 @@ func TestSeqLoad_single(t *testing.T) {
 
 func TestSeqLoad_fasta(t *testing.T) {
 	var seq_files []string
-	seq_files = append(seq_files,"./test_fasta.fasta")
-	test_seq := SeqLoad(seq_files, "fa", 18,32,2.0)
+	seq_files = append(seq_files,"./test_data/test_fasta.fasta")
+	test_seq := SeqLoad(seq_files, "fa", "nil",18,32,2.0)
 	should_be := make(map[string]*mean_se)
 	var single_mean_se *mean_se
 	single_mean_se = &mean_se{500000.0,0.0}
@@ -72,7 +72,7 @@ func TestSeqLoad_fasta(t *testing.T) {
 func TestSeqLoad_multi(t *testing.T) {
 	var seq_files []string
 	seq_files = append(seq_files,"./test_data/test_seq_1.fa", "./test_data/test_seq_2.fa")
-	test_seq := SeqLoad(seq_files, "cfa",18,32,1.0)
+	test_seq := SeqLoad(seq_files, "cfa","nil",18,32,1.0)
 	should_be := make(map[string]*mean_se)
 
 	var single_mean_se *mean_se
@@ -141,7 +141,7 @@ func TestAlign(t *testing.T){
 
 	var seq_files []string
 	seq_files = append(seq_files,"./test_data/test_seq_1.fa")
-	test_seq := SeqLoad(seq_files, "cfa",18,32,1.0)
+	test_seq := SeqLoad(seq_files, "cfa","nil",18,32,1.0)
 	test_align := AlignReads(test_seq,test_ref, 24)
 	pos_1 := []int{1,2}
 	single_align_1 := map[string][]int{"AAAAAAAAAAAAAAAAAAAAAAAA":pos_1}
