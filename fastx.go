@@ -13,6 +13,7 @@ import (
 	"errors"
 
 	"bytes"
+	"compress/gzip"
 )
 
 func error_shutdown() {
@@ -25,7 +26,7 @@ func error_shutdown() {
 //It returns a map with a read sequence as key and a mean_se struct (normalised read mean and standard error) as a value.
 //Only reads present in all input files are returned.  No FASTA format checking is  performed.  It is required
 // that the input file is correctly formatted.
-func SeqLoad(seq_files []string, min_len int, max_len int, min_count float64) map[string]*mean_se {
+func SeqLoad(seq_files []string, file_type string, min_len int, max_len int, min_count float64) map[string]*mean_se {
 	t1 := time.Now()
 	wg := &sync.WaitGroup{}
 	no_of_files := len(seq_files)
@@ -40,13 +41,19 @@ func SeqLoad(seq_files []string, min_len int, max_len int, min_count float64) ma
 	srna_maps := make(chan map[string]float64, len(seq_files))
 
 	for a := 0; a < len(seq_files); a++ {
-		go load_srna_file_go(file_names, srna_maps, min_len, max_len, min_count, wg)
+		if file_type == "cfa" {
+			go load_cfa_file_go(file_names, srna_maps, min_len, max_len, min_count, wg)
+		} else if file_type == "fa" {
+			go load_fx_file_go(file_names, []byte(">"), srna_maps, min_len, max_len, min_count, wg)
+		} else if file_type == "fq" {
+			go load_fx_file_go(file_names, []byte("@"), srna_maps, min_len, max_len, min_count, wg)
+		}
 	}
 	go func(cs chan map[string]float64, wg *sync.WaitGroup) {
 		wg.Wait()
 		close(cs)
 	}(srna_maps, wg)
-
+	fmt.Println(srna_maps)
 	seq_map_all_counts := compile_counts(srna_maps)
 	seq_map := calc_mean_se(seq_map_all_counts, no_of_files)
 	t3 := time.Since(t1)
@@ -55,7 +62,7 @@ func SeqLoad(seq_files []string, min_len int, max_len int, min_count float64) ma
 }
 
 //Load a single collapsed read file and return map of read sequence as key and normalised RPMR count as value
-func load_srna_file_go(file_names chan string, srna_maps chan map[string]float64,
+func load_cfa_file_go(file_names chan string, srna_maps chan map[string]float64,
 	min_len int, max_len int, min_count float64, wg *sync.WaitGroup) {
 	t1 := time.Now()
 	srna_map := make(map[string]float64)
@@ -63,6 +70,7 @@ func load_srna_file_go(file_names chan string, srna_maps chan map[string]float64
 	var total_count float64
 	file_name := <-file_names
 	f, err := os.Open(file_name)
+	defer f.Close()
 	if err !=nil {
 		fmt.Println("\nCan't load collapsed read file " + file_name)
 		os.Exit(1)
@@ -98,6 +106,76 @@ func load_srna_file_go(file_names chan string, srna_maps chan map[string]float64
 	fmt.Println("Single read file "+ file_name+" loaded: ", t2)
 	wg.Done()
 }
+
+
+func load_fx_file_go(file_names chan string, first_char []byte, srna_maps chan map[string]float64,
+	min_len int, max_len int, min_count float64, wg *sync.WaitGroup) {
+	t1 := time.Now()
+	srna_map := make(map[string]float64)
+
+	//var count float64
+	var total_count float64
+	file_name := <-file_names
+	f, err := os.Open(file_name)
+	if err !=nil {
+		fmt.Println("\nCan't load read file " + file_name)
+		os.Exit(1)
+	}
+	defer f.Close()
+	scanner := bufio.NewScanner(f)
+	if file_name[len(file_name)-2:]=="gz" {
+		gz, err := gzip.NewReader(f)
+		if err != nil {
+			fmt.Println("\nCan't decompress read file " + file_name)
+			os.Exit(1)
+		}
+		scanner = bufio.NewScanner(gz)
+	}
+
+	seq_next:=false
+	for scanner.Scan() {
+		fasta_line := scanner.Bytes()
+		//fmt.Println(fasta_line,fasta_line[0:1],string(fasta_line[0]))
+		switch {
+		//case seq_next==true && len(fasta_line)==0:
+		//	fmt.Println("Read file format problem - blank line between header and sequence in " + file_name)
+		//	error_shutdown()
+
+		case bytes.Equal(fasta_line[:1],first_char):
+			seq_next=true
+		case seq_next==true && len(fasta_line) >= min_len && len(fasta_line) <= max_len:
+			if srna_count, ok := srna_map[string(fasta_line)]; ok{
+				srna_map[string(fasta_line)] = srna_count+1.0
+				total_count += 1.0
+			} else {
+				srna_map[string(fasta_line)]=1.0
+				total_count += 1.0
+			}
+			seq_next=false
+		}
+	}
+	//TODO: write test function for this
+	if min_count > 1 {
+		for srna, srna_count := range srna_map {
+			if srna_count < min_count {
+				delete(srna_map, srna)
+				total_count-=srna_count
+			}
+		}
+	}
+	for srna, srna_count := range srna_map {
+		srna_map[srna] = 1000000 * srna_count / total_count
+	}
+	//fmt.Println(srna_map)
+	srna_maps <- srna_map
+	t2 := time.Since(t1)
+	fmt.Println("Single read file "+ file_name+" loaded: ", t2)
+	wg.Done()
+}
+
+
+
+
 
 func check_header_error(header_line []string, file_name string) error {
 	if len(header_line)<2 || len(header_line)>2 {
@@ -168,6 +246,7 @@ func RefLoad(ref_file string) []*header_ref {
 	var refSeq bytes.Buffer
 
 	f, err := os.Open(ref_file)
+	defer f.Close()
 	if err != nil {
 		fmt.Println("Problem opening fasta reference file "+ref_file)
 		error_shutdown()
