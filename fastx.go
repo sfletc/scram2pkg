@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 	"errors"
-
 	"bytes"
 	"compress/gzip"
 )
@@ -186,7 +185,6 @@ func addTrimmedRead(fasta_line []byte, seed string, min_len int, max_len int, sr
 			srna_map[string(read_slice[0])] = 1.0
 			total_count += 1.0
 		}
-
 	}
 	seq_next = false
 	return srna_map, total_count, seq_next
@@ -238,16 +236,12 @@ func checkHeaderError(header_line []string, file_name string) error {
 func compileCounts(srna_maps chan map[string]float64) map[string][]float64 {
 	//map [srna:[count1,count2....], ...]
 	seq_map_all_counts := make(map[string][]float64)
-	//no_of_files := float64(len(seq_files))
 	for single_seq_map := range srna_maps {
 		for srna, count := range single_seq_map {
 			if _, ok := seq_map_all_counts[srna]; ok {
-				//counts += count / no_of_files
 				seq_map_all_counts[srna] = append(seq_map_all_counts[srna], count)
 			} else {
-				counts := []float64{count}
-				//counts = count / no_of_files
-				seq_map_all_counts[srna] = counts
+				seq_map_all_counts[srna] = []float64{count}
 			}
 		}
 	}
@@ -260,27 +254,27 @@ type mean_se struct {
 	Se   float64
 }
 
+type read_counts struct {
+	read string
+	counts []float64
+}
+
 //calc_mean_se calculates the mean and standard error for each slice of counts
 func calcMeanSe(seq_map_all_counts map[string][]float64, no_of_files int) map[string]*mean_se {
 	seq_map := make(map[string]*mean_se)
+	sqrt:=math.Sqrt(float64(no_of_files))
 	for srna, counts := range seq_map_all_counts {
 		if len(counts) < no_of_files{
 			zeros := make([]float64,no_of_files-len(counts))
 			counts=append(counts,zeros[:]...)
 		}
-
 		switch {
 		case no_of_files > 1:
 			counts_mean, _ := stats.Mean(counts)
 			counts_stddev, _ := stats.StandardDeviationSample(counts)
-			counts_stderr := counts_stddev / math.Sqrt(float64(no_of_files))
-			read_stats := &mean_se{counts_mean, counts_stderr}
-			seq_map[srna] = read_stats
+			seq_map[srna] = &mean_se{counts_mean, counts_stddev / sqrt}
 		default:
-			read_stats := &mean_se{counts[0], 0.0}
-			seq_map[srna] = read_stats
-
-
+			seq_map[srna] = &mean_se{counts[0], 0.0}
 
 		}
 	}
@@ -301,7 +295,6 @@ func RefLoad(ref_file string) []*header_ref {
 	var single_header_ref *header_ref
 	var header string
 	var refSeq bytes.Buffer
-
 	f, err := os.Open(ref_file)
 	defer f.Close()
 	if err != nil {
