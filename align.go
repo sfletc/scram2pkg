@@ -1,10 +1,10 @@
 package scram2pkg
 
 import (
+	"bytes"
+	"fmt"
 	"sync"
 	"time"
-	"fmt"
-	"bytes"
 )
 
 //AlignReads aligns reads of  length nt to one or more reference sequences, with exact matches in forward or reverse

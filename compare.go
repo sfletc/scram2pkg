@@ -62,7 +62,7 @@ func CompareSplitCounts(alignment_map map[string]map[string][]int, seq_map map[s
 }
 
 //Calculates the number of times an aligned read aligns
-func calc_times_read_aligns(alignment_map map[string]map[string][]int) (map[string]int) {
+func calc_times_read_aligns(alignment_map map[string]map[string][]int) map[string]int {
 	srna_alignment_map := make(map[string]int)
 	for _, alignment := range alignment_map {
 		for srna, pos := range alignment {
@@ -122,7 +122,7 @@ func CompareToCsv(cdp_alignment_map map[string][]float64, nt int, out_prefix str
 	}
 	out_file := out_prefix + "_" + strconv.Itoa(nt) + ".csv"
 	f, err := os.Create(out_file)
-	if err != nil{
+	if err != nil {
 		fmt.Println("Can't save to file")
 		error_shutdown()
 	}

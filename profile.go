@@ -119,7 +119,7 @@ func ProfileToCsv(profile_alignments_map map[string]*single_alignments, ref_slic
 	}
 	out_file := out_prefix + "_" + strconv.Itoa(nt) + ".csv"
 	f, err := os.Create(out_file)
-	if err != nil{
+	if err != nil {
 		fmt.Println("Can't open csv file for writing")
 		error_shutdown()
 	}

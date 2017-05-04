@@ -24,7 +24,8 @@ func error_shutdown() {
 //It returns a map with a read sequence as key and a mean_se struct (normalised read mean and standard error) as a value.
 //Only reads present in all input files are returned.  Little format checking is  performed.  It is required
 // that the input file is correctly formatted.
-func SeqLoad(seq_files []string, file_type string, adapter string, min_len int, max_len int, min_count float64) map[string]*mean_se {
+func SeqLoad(seq_files []string, file_type string, adapter string, min_len int, max_len int,
+	min_count float64) map[string]*mean_se {
 	t1 := time.Now()
 	wg := &sync.WaitGroup{}
 	no_of_files := len(seq_files)
@@ -52,7 +53,7 @@ func SeqLoad(seq_files []string, file_type string, adapter string, min_len int, 
 		close(cs)
 	}(srna_maps, wg)
 	seq_map_all_counts := compileCounts(srna_maps)
-	seq_map := calcMeanSe(seq_map_all_counts, no_of_files)
+	seq_map := calcMeanSe(seq_map_all_counts, no_of_files, min_count)
 	t3 := time.Since(t1)
 	fmt.Println("Read file set processed: ", t3)
 	return seq_map
@@ -258,13 +259,22 @@ type mean_se struct {
 }
 
 //calc_mean_se calculates the mean and standard error for each slice of counts
-func calcMeanSe(seq_map_all_counts map[string][]float64, no_of_files int) map[string]*mean_se {
+func calcMeanSe(seq_map_all_counts map[string][]float64, no_of_files int, min_count float64) map[string]*mean_se {
 	seq_map := make(map[string]*mean_se)
 	sqrt := math.Sqrt(float64(no_of_files))
+	OUTER:
 	for srna, counts := range seq_map_all_counts {
 		if len(counts) < no_of_files {
-			zeros := make([]float64, no_of_files-len(counts))
-			counts = append(counts, zeros[:]...)
+			switch {
+			//If using a min_count > 1, unless the srna is present in all libraries, it's removed so as not
+			//to generate spurious means and standard errors
+			case min_count > 1:
+				delete(seq_map_all_counts, srna)
+				continue OUTER
+			default:
+				zeros := make([]float64, no_of_files-len(counts))
+				counts = append(counts, zeros[:]...)
+			}
 		}
 		switch {
 		case no_of_files > 1:
