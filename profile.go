@@ -13,6 +13,7 @@ import (
 //Details of an alignment for a discrete srna
 type single_alignment struct {
 	Seq   string  // Seq is an aligned read sequence
+	timesAligned int // No of times the read has aligned
 	Pos   int     // Pos is an aligned read position (from 5' fwd, starting at 1)
 	Count float64 // Count is a normalised count
 	Se    float64 // Se is the standard error
@@ -38,6 +39,7 @@ func (slice single_alignments) Swap(i, j int) {
 func ProfileNoSplit(alignment_map map[string]map[string][]int, seq_map map[string]*mean_se) map[string]*single_alignments {
 	//switch to concurrent once functional
 	t1 := time.Now()
+	srna_alignment_map := calc_times_read_aligns(alignment_map)
 	profile_alignments_map := make(map[string]*single_alignments)
 	for header, alignments := range alignment_map {
 		var combined_alignments single_alignments
@@ -46,11 +48,11 @@ func ProfileNoSplit(alignment_map map[string]map[string][]int, seq_map map[strin
 
 				switch {
 				case position > 0:
-					alignment := single_alignment{srna, position,
-						seq_map[srna].Mean, seq_map[srna].Se}
+					alignment := single_alignment{srna, srna_alignment_map[srna],
+						position,seq_map[srna].Mean, seq_map[srna].Se}
 					combined_alignments = append(combined_alignments, &alignment)
 				case position < 0:
-					alignment := single_alignment{srna,
+					alignment := single_alignment{srna, srna_alignment_map[srna],
 						0 - position, 0 - seq_map[srna].Mean, seq_map[srna].Se}
 					combined_alignments = append(combined_alignments, &alignment)
 				}
@@ -81,12 +83,12 @@ func ProfileSplit(alignment_map map[string]map[string][]int, seq_map map[string]
 				split_se := seq_map[srna].Se / float64(srna_alignment_map[srna])
 				switch {
 				case position > 0:
-					alignment := single_alignment{srna, position,
-						split_count_mean, split_se}
+					alignment := single_alignment{srna, srna_alignment_map[srna],
+						position, split_count_mean, split_se}
 					combined_alignments = append(combined_alignments, &alignment)
 				case position < 0:
-					alignment := single_alignment{srna, 0 - position,
-						0 - split_count_mean, split_se}
+					alignment := single_alignment{srna, srna_alignment_map[srna],
+						0 - position, 0 - split_count_mean, split_se}
 					combined_alignments = append(combined_alignments, &alignment)
 				}
 			}
@@ -103,7 +105,7 @@ func ProfileSplit(alignment_map map[string]map[string][]int, seq_map map[string]
 func ProfileToCsv(profile_alignments_map map[string]*single_alignments, ref_slice []*header_ref, nt int, out_prefix string) {
 	t1 := time.Now()
 	rows := [][]string{
-		{"Header", "len", "sRNA", "Position", "Count", "Std. Err"},
+		{"Header", "len", "sRNA","Position", "Count", "Std. Err", "Times aligned"},
 	}
 	for _, ref := range ref_slice {
 		if alignments, ok := profile_alignments_map[ref.header]; ok {
@@ -112,7 +114,8 @@ func ProfileToCsv(profile_alignments_map map[string]*single_alignments, ref_slic
 				row := []string{ref.header, strconv.Itoa(len(ref.seq)),
 					alignment.Seq, strconv.Itoa(alignment.Pos),
 					strconv.FormatFloat(alignment.Count, 'f', 3, 64),
-					strconv.FormatFloat(alignment.Se, 'f', 8, 64)}
+					strconv.FormatFloat(alignment.Se, 'f', 8, 64),
+					strconv.Itoa(alignment.timesAligned)}
 				rows = append(rows, row)
 			}
 		}
