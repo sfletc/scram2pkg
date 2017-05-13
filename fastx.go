@@ -40,11 +40,14 @@ func SeqLoad(seq_files []string, file_type string, adapter string, min_len int, 
 	srna_maps := make(chan map[string]float64, len(seq_files))
 
 	for a := 0; a < len(seq_files); a++ {
-		if file_type == "cfa" {
-			go loadCfaFile(file_names, srna_maps, min_len, max_len, min_count, wg)
-		} else if file_type == "fa" {
+		switch{
+		case file_type == "cfa":
+			go loadCfaFile(file_names, srna_maps, min_len, max_len, min_count, "-", wg)
+		case file_type == "clean":
+			go loadCfaFile(file_names, srna_maps, min_len, max_len, min_count, " ", wg)
+		case file_type == "fa":
 			go loadFastx(file_names, []byte(">"), adapter, srna_maps, min_len, max_len, min_count, wg)
-		} else if file_type == "fq" {
+		case file_type == "fq":
 			go loadFastx(file_names, []byte("@"), adapter, srna_maps, min_len, max_len, min_count, wg)
 		}
 	}
@@ -61,7 +64,7 @@ func SeqLoad(seq_files []string, file_type string, adapter string, min_len int, 
 
 //Load a single collapsed read file and return map of read sequence as key and normalised RPMR count as value
 func loadCfaFile(file_names chan string, srna_maps chan map[string]float64,
-	min_len int, max_len int, min_count float64, wg *sync.WaitGroup) {
+	min_len int, max_len int, min_count float64, sep string, wg *sync.WaitGroup) {
 	t1 := time.Now()
 	srna_map := make(map[string]float64)
 	var count float64
@@ -91,12 +94,12 @@ func loadCfaFile(file_names chan string, srna_maps chan map[string]float64,
 			error_shutdown()
 		}
 		if strings.HasPrefix(fasta_line, ">") {
-			header_line := strings.Split(fasta_line, "-")
+			header_line := strings.Split(fasta_line, sep)
 			err := checkHeaderError(header_line, file_name)
 			if err != nil {
 				error_shutdown()
 			}
-			count, err = strconv.ParseFloat(strings.Split(fasta_line, "-")[1], 32)
+			count, err = strconv.ParseFloat(strings.Split(fasta_line, sep)[1], 32)
 			seq_next = true
 		} else if count >= min_count && len(fasta_line) >= min_len && len(fasta_line) <= max_len {
 			total_count += count

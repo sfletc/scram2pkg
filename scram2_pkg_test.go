@@ -32,6 +32,29 @@ func TestSeqLoad_single(t *testing.T) {
 	}
 }
 
+func TestSeqLoad_clean(t *testing.T) {
+	var seq_files []string
+	seq_files = append(seq_files, "./test_data/test_seq_5.fa")
+	test_seq := SeqLoad(seq_files, "clean", "nil", 18, 32, 2.0)
+	fmt.Println(test_seq )
+	should_be := make(map[string]*mean_se)
+	var single_mean_se *mean_se
+	single_mean_se = &mean_se{500000.0, 0.0}
+	should_be["AAAAAAAAAAAAAAAAAAAAAAAA"] = single_mean_se
+	single_mean_se = &mean_se{250000.0, 0.0}
+	should_be["GGGGGGGGGGGGGGGGGGGGGGGG"] = single_mean_se
+	single_mean_se = &mean_se{250000.0, 0.0}
+	should_be["GGGGGGGGGGGGGGGGGGGGGGGC"] = single_mean_se
+	for read, mean_ses := range test_seq {
+		fmt.Println(read, mean_ses.Mean, mean_ses.Se)
+	}
+
+	eq := reflect.DeepEqual(test_seq, should_be)
+	if eq == false {
+		t.Error("SeqLoad not working for single seq")
+	}
+}
+
 func TestSeqLoad_fasta(t *testing.T) {
 	var seq_files []string
 	seq_files = append(seq_files, "./test_data/test_fasta.fasta")
