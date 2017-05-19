@@ -104,15 +104,26 @@ func ProfileSplit(alignment_map map[string]map[string][]int, seq_map map[string]
 //ProfileToCsv writes the  den results to a csv file
 func ProfileToCsv(profile_alignments_map map[string]*single_alignments, ref_slice []*header_ref, nt int, out_prefix string) {
 	t1 := time.Now()
+	var strand string
 	rows := [][]string{
-		{"Header", "len", "sRNA","Position", "Count", "Std. Err", "Times aligned"},
+		{"Header", "len", "sRNA","Position", "Strand", "Count", "Std. Err","Times aligned"},
 	}
 	for _, ref := range ref_slice {
 		if alignments, ok := profile_alignments_map[ref.header]; ok {
 
 			for _, alignment := range *alignments {
+
+				switch {
+				//TODO: fix this hack
+				case alignment.Count<0:
+					strand = "-"
+					alignment.Count=0.0-alignment.Count
+				default:
+					strand = "+"
+				}
 				row := []string{ref.header, strconv.Itoa(len(ref.seq)),
 					alignment.Seq, strconv.Itoa(alignment.Pos),
+					strand,
 					strconv.FormatFloat(alignment.Count, 'f', 3, 64),
 					strconv.FormatFloat(alignment.Se, 'f', 8, 64),
 					strconv.Itoa(alignment.timesAligned)}
