@@ -7,7 +7,6 @@ import (
 	"os"
 	"sort"
 	"strconv"
-	"time"
 )
 
 //Details of an alignment for a discrete srna
@@ -38,7 +37,6 @@ func (slice single_alignments) Swap(i, j int) {
 //number of times a read aligns.
 func ProfileNoSplit(alignment_map map[string]map[string][]int, seq_map map[string]*mean_se) map[string]*single_alignments {
 	//switch to concurrent once functional
-	t1 := time.Now()
 	srna_alignment_map := calc_times_read_aligns(alignment_map)
 	profile_alignments_map := make(map[string]*single_alignments)
 	for header, alignments := range alignment_map {
@@ -61,8 +59,6 @@ func ProfileNoSplit(alignment_map map[string]map[string][]int, seq_map map[strin
 		sort.Sort(combined_alignments)
 		profile_alignments_map[header] = &combined_alignments
 	}
-	t2 := time.Since(t1)
-	fmt.Println("Alignments processed: ", t2)
 	return profile_alignments_map
 }
 
@@ -71,7 +67,7 @@ func ProfileNoSplit(alignment_map map[string]map[string][]int, seq_map map[strin
 //single_alignment structs (read seq, position, count, se).  The count for each read alignment is split by the
 //number of times a read aligns.
 func ProfileSplit(alignment_map map[string]map[string][]int, seq_map map[string]*mean_se) map[string]*single_alignments {
-	t1 := time.Now()
+
 
 	srna_alignment_map := calc_times_read_aligns(alignment_map)
 	profile_alignments_map := make(map[string]*single_alignments)
@@ -96,14 +92,12 @@ func ProfileSplit(alignment_map map[string]map[string][]int, seq_map map[string]
 		sort.Sort(combined_alignments)
 		profile_alignments_map[header] = &combined_alignments
 	}
-	t2 := time.Since(t1)
-	fmt.Println("Alignments processed: ", t2)
 	return profile_alignments_map
 }
 
 //ProfileToCsv writes the  den results to a csv file
 func ProfileToCsv(profile_alignments_map map[string]*single_alignments, ref_slice []*header_ref, nt int, out_prefix string) {
-	t1 := time.Now()
+
 	var strand string
 	rows := [][]string{
 		{"Header", "len", "sRNA","Position", "Strand", "Count", "Std. Err","Times aligned"},
@@ -142,6 +136,4 @@ func ProfileToCsv(profile_alignments_map map[string]*single_alignments, ref_slic
 	if err := w.Error(); err != nil {
 		log.Fatalln("error writing csv:", err)
 	}
-	t2 := time.Since(t1)
-	fmt.Println("Written to file: ", t2)
 }

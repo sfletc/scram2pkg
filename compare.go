@@ -7,7 +7,6 @@ import (
 	"math"
 	"os"
 	"strconv"
-	"time"
 )
 
 //CompareNoSplitCounts takes and alignment map and returns a map with the ref_header as key and the
@@ -15,7 +14,6 @@ import (
 //of times a read aligns to all reference sequences.
 func CompareNoSplitCounts(alignment_map map[string]map[string][]int, seq_map map[string]*mean_se) map[string]mean_se {
 	cdp_alignment_map := make(map[string]mean_se)
-	t1 := time.Now()
 	for header, alignment := range alignment_map {
 		var counts float64
 		var counts_err []float64 //error_shutdown this
@@ -29,8 +27,6 @@ func CompareNoSplitCounts(alignment_map map[string]map[string][]int, seq_map map
 		}
 		cdp_alignment_map = calc_header_mean_se(counts_err, counts, cdp_alignment_map, header)
 	}
-	t2 := time.Since(t1)
-	fmt.Println("Aligned read set processed (absolute count): ", t2)
 	return cdp_alignment_map
 }
 
@@ -38,7 +34,6 @@ func CompareNoSplitCounts(alignment_map map[string]map[string][]int, seq_map map
 //mean_se (mean and standard error) of aligned reads for that ref seq as value.  Read counts are split by the number
 //of times a read aligns to all reference sequences.
 func CompareSplitCounts(alignment_map map[string]map[string][]int, seq_map map[string]*mean_se) map[string]mean_se {
-	t1 := time.Now()
 	cdp_alignment_map := make(map[string]mean_se)
 	//Calc. no. of times each read aligns
 	srna_alignment_map := calc_times_read_aligns(alignment_map)
@@ -56,8 +51,6 @@ func CompareSplitCounts(alignment_map map[string]map[string][]int, seq_map map[s
 		}
 		cdp_alignment_map = calc_header_mean_se(counts_err, counts, cdp_alignment_map, header)
 	}
-	t2 := time.Since(t1)
-	fmt.Println("Aligned read set processed (split count): ", t2)
 	return cdp_alignment_map
 }
 
@@ -93,7 +86,6 @@ func calc_header_mean_se(counts_err []float64, counts float64, cdp_alignment_map
 //as key and a slice of set 1 mean/se and set2 mean/se as value.
 func Compare(counts_map_1 map[string]mean_se, counts_map_2 map[string]mean_se) map[string][]float64 {
 	cdp_final_map := make(map[string][]float64)
-	t1 := time.Now()
 	//TODO: This only includes if BOTH maps have a non-zero count alignment - perhaps should mod?
 	for header, count_stats := range counts_map_1 {
 		if count_stats_2, ok := counts_map_2[header]; ok {
@@ -101,14 +93,11 @@ func Compare(counts_map_1 map[string]mean_se, counts_map_2 map[string]mean_se) m
 				count_stats.Se, count_stats_2.Mean, count_stats_2.Se)
 		}
 	}
-	t2 := time.Since(t1)
-	fmt.Println("Alignments combined: ", t2)
 	return cdp_final_map
 }
 
 //CompareToCsv writes the output to a csv file.
 func CompareToCsv(cdp_alignment_map map[string][]float64, nt int, out_prefix string) {
-	t1 := time.Now()
 	alignments := [][]string{
 		{"Header", "Mean count 1", "Std. err 1", "Mean count 2", "Std. err 2"},
 	}
@@ -131,6 +120,4 @@ func CompareToCsv(cdp_alignment_map map[string][]float64, nt int, out_prefix str
 	if err := w.Error(); err != nil {
 		log.Fatalln("error writing csv:", err)
 	}
-	t2 := time.Since(t1)
-	fmt.Println("Written to file: ", t2)
 }

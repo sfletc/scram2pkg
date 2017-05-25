@@ -2,9 +2,7 @@ package scram2pkg
 
 import (
 	"bytes"
-	"fmt"
 	"sync"
-	"time"
 )
 
 //AlignReads aligns reads of  length nt to one or more reference sequences, with exact matches in forward or reverse
@@ -12,7 +10,6 @@ import (
 //A map of ref_header:[srna_seq:[pos,pos,...],...] is returned.
 func AlignReads(seq_map map[string]*mean_se, ref_slice []*header_ref, nt int) map[string]map[string][]int {
 	wg := &sync.WaitGroup{}
-	t1 := time.Now()
 	wg.Add(len(ref_slice))
 
 	ref_seq_chan := make(chan *header_ref, len(ref_slice))
@@ -31,8 +28,6 @@ func AlignReads(seq_map map[string]*mean_se, ref_slice []*header_ref, nt int) ma
 	}(header_map_chan, wg)
 
 	final_alignment_map := compile_alignments(header_map_chan)
-	t2 := time.Since(t1)
-	fmt.Println("Read file set aligned to reference/s: ", t2)
 	return final_alignment_map
 }
 

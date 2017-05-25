@@ -12,7 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
+	"github.com/dustin/go-humanize"
+
 )
 
 func error_shutdown() {
@@ -26,7 +27,6 @@ func error_shutdown() {
 // that the input file is correctly formatted.
 func SeqLoad(seq_files []string, file_type string, adapter string, min_len int, max_len int,
 	min_count float64) map[string]*mean_se {
-	t1 := time.Now()
 	wg := &sync.WaitGroup{}
 	no_of_files := len(seq_files)
 	wg.Add(no_of_files)
@@ -57,15 +57,12 @@ func SeqLoad(seq_files []string, file_type string, adapter string, min_len int, 
 	}(srna_maps, wg)
 	seq_map_all_counts := compileCounts(srna_maps)
 	seq_map := calcMeanSe(seq_map_all_counts, no_of_files, min_count)
-	t3 := time.Since(t1)
-	fmt.Println("Read file set processed: ", t3)
 	return seq_map
 }
 
 //Load a single collapsed read file and return map of read sequence as key and normalised RPMR count as value
 func loadCfaFile(file_names chan string, srna_maps chan map[string]float64,
 	min_len int, max_len int, min_count float64, sep string, wg *sync.WaitGroup) {
-	t1 := time.Now()
 	srna_map := make(map[string]float64)
 	var count float64
 	var total_count float64
@@ -109,8 +106,8 @@ func loadCfaFile(file_names chan string, srna_maps chan map[string]float64,
 	}
 	srna_map = rpmrNormalize(srna_map, total_count)
 	srna_maps <- srna_map
-	t2 := time.Since(t1)
-	fmt.Println("Single read file "+file_name+" loaded: ", t2)
+
+	fmt.Println(file_name+" - "+humanize.Comma(int64(total_count))+" reads processed")
 	wg.Done()
 }
 
@@ -118,7 +115,6 @@ func loadCfaFile(file_names chan string, srna_maps chan map[string]float64,
 //Trim adapter from 3' end using up to 12 nt of 5' end of adapter as seed if required
 func loadFastx(file_names chan string, first_char []byte, adapter string, srna_maps chan map[string]float64,
 	min_len int, max_len int, min_count float64, wg *sync.WaitGroup) {
-	t1 := time.Now()
 	trim := false
 	var seed string
 	trim, seed = trimAdapter(adapter, trim, seed)
@@ -159,8 +155,7 @@ func loadFastx(file_names chan string, first_char []byte, adapter string, srna_m
 	srna_map, total_count = removeReadsBelowMin(min_count, srna_map, total_count)
 	srna_map = rpmrNormalize(srna_map, total_count)
 	srna_maps <- srna_map
-	t2 := time.Since(t1)
-	fmt.Println("Single read file "+file_name+" loaded: ", t2)
+	fmt.Println(file_name+" - "+humanize.Comma(int64(total_count))+" reads processed")
 	wg.Done()
 }
 
@@ -301,7 +296,7 @@ type header_ref struct {
 //RefLoad loads a reference sequence DNA file (FASTA format).
 //It returns a slice of header_ref structs (individual reference header and sequence).
 func RefLoad(ref_file string) []*header_ref {
-	t1 := time.Now()
+	var totalLength int
 	var ref_slice []*header_ref
 	var single_header_ref *header_ref
 	var header string
@@ -323,14 +318,14 @@ func RefLoad(ref_file string) []*header_ref {
 			refSeq.Reset()
 		case len(fasta_line) != 0:
 			refSeq.WriteString(strings.ToUpper(fasta_line))
+			totalLength+=len(fasta_line)
 		}
 	}
 	single_header_ref = &header_ref{header, refSeq.String()}
 	ref_slice = append(ref_slice, single_header_ref)
 	ref_slice = ref_slice[1:]
 
-	t2 := time.Since(t1)
 	fmt.Println("No. of reference sequences: ", len(ref_slice))
-	fmt.Println("Reference file processed: ", t2)
+	fmt.Println("Combined length of reference sequences: " + humanize.Comma(int64(totalLength))+" nt")
 	return ref_slice
 }
