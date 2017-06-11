@@ -72,26 +72,6 @@ func TestSeqLoad_fasta(t *testing.T) {
 
 }
 
-//func TestSeqLoad_fa_fq(t *testing.T) {
-//	var seq_files_1 []string
-//	var seq_files_2 []string
-//	var seq_files_3 []string
-//	seq_files_1 = append(seq_files_1, "c:/Users/steve/Desktop/1RDB.fq.gz")
-//	test_seq_1 := SeqLoad(seq_files_1, "fq", "nil", 18, 32, 2.0)
-//	seq_files_2 = append(seq_files_2, "c:/Users/steve/Desktop/1RDB.fasta")
-//	test_seq_2 := SeqLoad(seq_files_2, "fa", "nil", 18, 32, 2.0)
-//	seq_files_3 = append(seq_files_3, "c:/Users/steve/Desktop/1RDB.fa")
-//	test_seq_3 := SeqLoad(seq_files_3, "cfa", "nil", 18, 32, 2.0)
-//	eq_1 := reflect.DeepEqual(test_seq_1, test_seq_2)
-//	if eq_1 == false {
-//		t.Error("fq and fasta do not match")
-//	}
-//	eq_2 := reflect.DeepEqual(test_seq_1, test_seq_3)
-//	if eq_2 == false {
-//		t.Error("cfa and fq/fasta do not match")
-//	}
-//}
-
 func TestSeqLoad_multi(t *testing.T) {
 	var seq_files []string
 	seq_files = append(seq_files, "./test_data/test_seq_1.fa", "./test_data/test_seq_2.fa")
@@ -141,16 +121,6 @@ func TestSeqLoad_multi_minCount(t *testing.T) {
 	}
 
 }
-
-
-
-//func TestSeqLoad_bad_format(t *testing.T) {
-//	var seq_files []string
-//	seq_files = append(seq_files,"./test_data/test_seq_3_badformat.fa")
-//	test_seq := SeqLoad(seq_files,18,32,1.0)
-//	fmt.Println(test_seq)
-
-//}
 
 func TestRefLoad(t *testing.T) {
 	test_ref := RefLoad("./test_data/test_ref.fa")
