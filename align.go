@@ -1,7 +1,7 @@
 package scram2pkg
 
 import (
-	"bytes"
+	//"bytes"
 	"sync"
 )
 
@@ -36,17 +36,14 @@ func worker_go(seq_map map[string]*mean_se, ref_seqs chan *header_ref, nt int,
 	header_map_chan chan map[string]map[string][]int, wg *sync.WaitGroup) {
 
 	ref_seq := <-ref_seqs
-	rvs_seq := reverse_complement(ref_seq.seq)
-	//srna alignment map --> srna_seq:[pos, pos]
 	header_mapped := make(map[string][]int)
-	//header_alignment map header:[srna_seq:[pos,pos]]
 	mapped := make(map[string]map[string][]int, 1)
 	position := 0
 	ref_seq_len := len(ref_seq.seq)
 	for position <= ref_seq_len-nt {
 		//each alignment position for an srna
 		fwd_seq := ref_seq.seq[position : position+nt]
-		rvs_seq := rvs_seq[position : position+nt]
+		rvs_seq := ref_seq.reverseSeq[position : position+nt]
 		if _, ok := seq_map[fwd_seq]; ok {
 			header_mapped[fwd_seq] = append(header_mapped[fwd_seq], 1+position)
 		}
@@ -62,22 +59,7 @@ func worker_go(seq_map map[string]*mean_se, ref_seqs chan *header_ref, nt int,
 	wg.Done()
 }
 
-//reverse_complement a DNA sequence
-func reverse_complement(dna string) string {
-	complement := map[rune]rune{
-		'A': 'T',
-		'C': 'G',
-		'G': 'C',
-		'T': 'A',
-		'N': 'N',
-	}
-	runes := []rune(dna)
-	var result bytes.Buffer
-	for i := len(runes) - 1; i >= 0; i-- {
-		result.WriteRune(complement[runes[i]])
-	}
-	return result.String()
-}
+
 
 //compile_alignments compiles the alignments
 func compile_alignments(header_map_chan chan map[string]map[string][]int) map[string]map[string][]int {

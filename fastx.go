@@ -26,7 +26,7 @@ func error_shutdown() {
 //Only reads present in all input files are returned.  Little format checking is  performed.  It is required
 // that the input file is correctly formatted.
 func SeqLoad(seq_files []string, file_type string, adapter string, min_len int, max_len int,
-	min_count float64) map[string]*mean_se {
+	min_count float64, noNorm bool) map[string]*mean_se {
 	wg := &sync.WaitGroup{}
 	no_of_files := len(seq_files)
 	wg.Add(no_of_files)
@@ -42,13 +42,13 @@ func SeqLoad(seq_files []string, file_type string, adapter string, min_len int, 
 	for a := 0; a < len(seq_files); a++ {
 		switch{
 		case file_type == "cfa":
-			go loadCfaFile(file_names, srna_maps, min_len, max_len, min_count, "-", wg)
+			go loadCfaFile(file_names, srna_maps, min_len, max_len, min_count, "-", noNorm, wg)
 		case file_type == "clean":
-			go loadCfaFile(file_names, srna_maps, min_len, max_len, min_count, " ", wg)
+			go loadCfaFile(file_names, srna_maps, min_len, max_len, min_count, " ", noNorm,wg)
 		case file_type == "fa":
-			go loadFastx(file_names, []byte(">"), adapter, srna_maps, min_len, max_len, min_count, wg)
+			go loadFastx(file_names, []byte(">"), adapter, srna_maps, min_len, max_len, min_count, noNorm,wg)
 		case file_type == "fq":
-			go loadFastx(file_names, []byte("@"), adapter, srna_maps, min_len, max_len, min_count, wg)
+			go loadFastx(file_names, []byte("@"), adapter, srna_maps, min_len, max_len, min_count, noNorm,wg)
 		}
 	}
 	go func(cs chan map[string]float64, wg *sync.WaitGroup) {
@@ -62,7 +62,7 @@ func SeqLoad(seq_files []string, file_type string, adapter string, min_len int, 
 
 //Load a single collapsed read file and return map of read sequence as key and normalised RPMR count as value
 func loadCfaFile(file_names chan string, srna_maps chan map[string]float64,
-	min_len int, max_len int, min_count float64, sep string, wg *sync.WaitGroup) {
+	min_len int, max_len int, min_count float64, sep string, noNorm bool, wg *sync.WaitGroup) {
 	srna_map := make(map[string]float64)
 	var count float64
 	var total_count float64
@@ -104,7 +104,9 @@ func loadCfaFile(file_names chan string, srna_maps chan map[string]float64,
 			seq_next = false
 		}
 	}
-	srna_map = rpmrNormalize(srna_map, total_count)
+	if noNorm==false {
+		srna_map = rpmrNormalize(srna_map, total_count)
+	}
 	srna_maps <- srna_map
 
 	fmt.Println(file_name+" - "+humanize.Comma(int64(total_count))+" reads processed")
@@ -114,7 +116,7 @@ func loadCfaFile(file_names chan string, srna_maps chan map[string]float64,
 //Load a single FASTA or FASTQ file and return map of read sequence as key and normalised RPMR count as value.
 //Trim adapter from 3' end using up to 12 nt of 5' end of adapter as seed if required
 func loadFastx(file_names chan string, first_char []byte, adapter string, srna_maps chan map[string]float64,
-	min_len int, max_len int, min_count float64, wg *sync.WaitGroup) {
+	min_len int, max_len int, min_count float64, noNorm bool, wg *sync.WaitGroup) {
 	trim := false
 	var seed string
 	trim, seed = trimAdapter(adapter, trim, seed)
@@ -153,7 +155,10 @@ func loadFastx(file_names chan string, first_char []byte, adapter string, srna_m
 		}
 	}
 	srna_map, total_count = removeReadsBelowMin(min_count, srna_map, total_count)
-	srna_map = rpmrNormalize(srna_map, total_count)
+
+	if noNorm==false {
+		srna_map = rpmrNormalize(srna_map, total_count)
+	}
 	srna_maps <- srna_map
 	fmt.Println(file_name+" - "+humanize.Comma(int64(total_count))+" reads processed")
 	wg.Done()
@@ -291,10 +296,11 @@ func calcMeanSe(seq_map_all_counts map[string][]float64, no_of_files int, min_co
 type header_ref struct {
 	header string
 	seq    string
+	reverseSeq string
 }
 
 //RefLoad loads a reference sequence DNA file (FASTA format).
-//It returns a slice of header_ref structs (individual reference header and sequence).
+//It returns a slice of header_ref structs (individual reference header, sequence and reverse complement).
 func RefLoad(ref_file string) []*header_ref {
 	var totalLength int
 	var ref_slice []*header_ref
@@ -312,7 +318,8 @@ func RefLoad(ref_file string) []*header_ref {
 		fasta_line := scanner.Text()
 		switch {
 		case strings.HasPrefix(fasta_line, ">"):
-			single_header_ref = &header_ref{header, refSeq.String()}
+			seq:=refSeq.String()
+			single_header_ref = &header_ref{header, seq,reverse_complement(seq)}
 			ref_slice = append(ref_slice, single_header_ref)
 			header = fasta_line[1:]
 			refSeq.Reset()
@@ -321,11 +328,29 @@ func RefLoad(ref_file string) []*header_ref {
 			totalLength+=len(fasta_line)
 		}
 	}
-	single_header_ref = &header_ref{header, refSeq.String()}
+	seq:=refSeq.String()
+	single_header_ref = &header_ref{header, seq, reverse_complement(seq)}
 	ref_slice = append(ref_slice, single_header_ref)
 	ref_slice = ref_slice[1:]
 
 	fmt.Println("No. of reference sequences: ", len(ref_slice))
 	fmt.Println("Combined length of reference sequences: " + humanize.Comma(int64(totalLength))+" nt")
 	return ref_slice
+}
+
+//Reverse complements a DNA sequence
+func reverse_complement(seq string) string {
+	complement := map[rune]rune{
+		'A': 'T',
+		'C': 'G',
+		'G': 'C',
+		'T': 'A',
+		'N': 'N',
+	}
+	runes := []rune(seq)
+	var result bytes.Buffer
+	for i := len(runes) - 1; i >= 0; i-- {
+		result.WriteRune(complement[runes[i]])
+	}
+	return result.String()
 }

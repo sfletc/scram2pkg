@@ -13,7 +13,7 @@ import (
 func TestSeqLoad_single(t *testing.T) {
 	var seq_files []string
 	seq_files = append(seq_files, "./test_data/test_seq_1.fa")
-	test_seq := SeqLoad(seq_files, "cfa", "nil", 18, 32, 2.0)
+	test_seq := SeqLoad(seq_files, "cfa", "nil", 18, 32, 2.0, false)
 	should_be := make(map[string]*mean_se)
 	var single_mean_se *mean_se
 	single_mean_se = &mean_se{500000.0, 0.0}
@@ -35,7 +35,7 @@ func TestSeqLoad_single(t *testing.T) {
 func TestSeqLoad_clean(t *testing.T) {
 	var seq_files []string
 	seq_files = append(seq_files, "./test_data/test_seq_5.fa")
-	test_seq := SeqLoad(seq_files, "clean", "nil", 18, 32, 2.0)
+	test_seq := SeqLoad(seq_files, "clean", "nil", 18, 32, 2.0,false)
 	fmt.Println(test_seq )
 	should_be := make(map[string]*mean_se)
 	var single_mean_se *mean_se
@@ -58,7 +58,7 @@ func TestSeqLoad_clean(t *testing.T) {
 func TestSeqLoad_fasta(t *testing.T) {
 	var seq_files []string
 	seq_files = append(seq_files, "./test_data/test_fasta.fasta")
-	test_seq := SeqLoad(seq_files, "fa", "nil", 18, 32, 2.0)
+	test_seq := SeqLoad(seq_files, "fa", "nil", 18, 32, 2.0,false)
 	should_be := make(map[string]*mean_se)
 	var single_mean_se *mean_se
 	single_mean_se = &mean_se{500000.0, 0.0}
@@ -75,7 +75,7 @@ func TestSeqLoad_fasta(t *testing.T) {
 func TestSeqLoad_multi(t *testing.T) {
 	var seq_files []string
 	seq_files = append(seq_files, "./test_data/test_seq_1.fa", "./test_data/test_seq_2.fa")
-	test_seq := SeqLoad(seq_files, "cfa", "nil", 18, 32, 1.0)
+	test_seq := SeqLoad(seq_files, "cfa", "nil", 18, 32, 1.0,false)
 	should_be := make(map[string]*mean_se)
 
 	var single_mean_se *mean_se
@@ -106,7 +106,7 @@ func TestSeqLoad_multi(t *testing.T) {
 func TestSeqLoad_multi_minCount(t *testing.T) {
 	var seq_files []string
 	seq_files = append(seq_files, "./test_data/test_seq_1.fa", "./test_data/test_seq_4.fa")
-	test_seq := SeqLoad(seq_files, "cfa", "nil", 18, 32, 26)
+	test_seq := SeqLoad(seq_files, "cfa", "nil", 18, 32, 26,false)
 	should_be := make(map[string]*mean_se)
 
 	var single_mean_se *mean_se
@@ -125,9 +125,9 @@ func TestSeqLoad_multi_minCount(t *testing.T) {
 func TestRefLoad(t *testing.T) {
 	test_ref := RefLoad("./test_data/test_ref.fa")
 	var should_be []*header_ref
-	ref1 := &header_ref{"ref_1", "AAAAAAAAAAAAAAAAAAAAAAAAA"}
-	ref2 := &header_ref{"ref_2", "GGGGGGGGGGGGGGGGGGGGGGGGTAAAAAAAAAAAAAAAAAAAAAAAAG"}
-	ref3 := &header_ref{"ref_3", ""}
+	ref1 := &header_ref{"ref_1", "AAAAAAAAAAAAAAAAAAAAAAAAA","TTTTTTTTTTTTTTTTTTTTTTTTT"}
+	ref2 := &header_ref{"ref_2", "GGGGGGGGGGGGGGGGGGGGGGGGTAAAAAAAAAAAAAAAAAAAAAAAAG","CTTTTTTTTTTTTTTTTTTTTTTTTACCCCCCCCCCCCCCCCCCCCCCCC"}
+	ref3 := &header_ref{"ref_3", "",""}
 	should_be = append(should_be, ref1, ref2, ref3)
 	fmt.Println(test_ref)
 	if len(test_ref) != len(should_be) {
@@ -152,7 +152,7 @@ func TestAlign(t *testing.T) {
 
 	var seq_files []string
 	seq_files = append(seq_files, "./test_data/test_seq_1.fa")
-	test_seq := SeqLoad(seq_files, "cfa", "nil", 18, 32, 1.0)
+	test_seq := SeqLoad(seq_files, "cfa", "nil", 18, 32, 1.0,false)
 	test_align := AlignReads(test_seq, test_ref, 24)
 	pos_1 := []int{1, 2}
 	single_align_1 := map[string][]int{"AAAAAAAAAAAAAAAAAAAAAAAA": pos_1}
