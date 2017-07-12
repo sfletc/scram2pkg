@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"path/filepath"
 )
 
 //CompareNoSplitCounts takes and alignment map and returns a map with the ref_header as key and the
@@ -110,6 +111,8 @@ func CompareToCsv(cdp_alignment_map map[string][]float64, nt int, out_prefix str
 		alignments = append(alignments, alignment)
 	}
 	out_file := out_prefix + "_" + strconv.Itoa(nt) + ".csv"
+	out_dir := filepath.Dir(out_file)
+	os.MkdirAll(out_dir,0777)
 	f, err := os.Create(out_file)
 	if err != nil {
 		fmt.Println("Can't save to file")
