@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strconv"
 	"sync"
+	"path/filepath"
 )
 
 //Details of an alignment for a discrete srna
@@ -168,6 +169,8 @@ func ProfileToCsv(profile_alignments_map map[string]*single_alignments, ref_slic
 		}
 	}
 	out_file := out_prefix + "_" + strconv.Itoa(nt) + ".csv"
+	out_dir := filepath.Dir(out_file)
+	os.MkdirAll(out_dir,0777)
 	f, err := os.Create(out_file)
 	if err != nil {
 		fmt.Println("Can't open csv file for writing")

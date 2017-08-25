@@ -1,7 +1,6 @@
 package scram2pkg
 
 import (
-	//"bytes"
 	"sync"
 )
 
@@ -70,4 +69,23 @@ func compile_alignments(header_map_chan chan map[string]map[string][]int) map[st
 		}
 	}
 	return final_alignment_map
+}
+
+type mean_se_dup struct {
+	mean_se *mean_se
+	dup float64
+}
+//AlignMirnas aligns reads of any length to the miRNAs in the sense orientation only.  Only alignments
+//in which len(read)==len(mirna) are retained.
+//A map of mirna_header:mean_se_dup is returned
+func AlignMirnas(seq_map map[string]*mean_se, mirna_map map[string]*mirna_seq_dup) map[string]*mean_se_dup{
+	mirna_alignment_map := make(map[string]*mean_se_dup)
+	//as the mirna map is likely smaller than the srna map
+	for mirna_header, mirna_seq_dup := range mirna_map {
+		if mean_se, ok := seq_map[mirna_seq_dup.seq]; ok {
+			mirna_alignment_map[mirna_header]= &mean_se_dup{mean_se,mirna_seq_dup.dup}
+			}
+		}
+
+	return mirna_alignment_map
 }

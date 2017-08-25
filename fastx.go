@@ -354,3 +354,41 @@ func reverse_complement(seq string) string {
 	}
 	return result.String()
 }
+
+type mirna_seq_dup struct {
+	seq string
+	dup float64
+}
+
+//MirLoad loads mature miRNA sequences from a mirna FASTA file (i.e. generated from miRBase)
+//It returns a map of headers : mirna sequences (converted to DNA)
+func MirLoad(mirFile string) map[string]*mirna_seq_dup {
+	var header string
+	mirna_map := make(map[string]*mirna_seq_dup)
+	mirna_dup := make(map[string]float64)
+	f, err := os.Open(mirFile)
+	defer f.Close()
+	if err != nil {
+		fmt.Println("Problem opening fasta reference file " + mirFile)
+		error_shutdown()
+	}
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		fasta_line := scanner.Text()
+		switch {
+		case strings.HasPrefix(fasta_line, ">"):
+			header = fasta_line[1:]
+		case len(fasta_line) != 0:
+			seq := strings.Replace(strings.ToUpper(fasta_line),"U","T",-1)
+			mirna_map[header]=&mirna_seq_dup{seq, 0.0}
+			mirna_dup[seq]+=1.0
+		}
+
+	}
+	for mirna_header, seq_dup := range mirna_map {
+		if dup, ok := mirna_dup[seq_dup.seq]; ok {
+			mirna_map[mirna_header].dup = dup
+		}
+	}
+	return mirna_map
+}

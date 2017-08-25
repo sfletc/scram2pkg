@@ -97,6 +97,25 @@ func Compare(counts_map_1 map[string]mean_se, counts_map_2 map[string]mean_se) m
 	return cdp_final_map
 }
 
+func MirnaCompare(mirna_alignment_map_1 map[string]*mean_se_dup, mirna_alignment_map_2 map[string]*mean_se_dup, noSplit bool) map[string][]float64 {
+	cdp_final_map := make(map[string][]float64)
+	for header, count_stats := range mirna_alignment_map_1 {
+		if count_stats_2, ok := mirna_alignment_map_2[header]; ok {
+			switch {
+			case noSplit == true:
+				cdp_final_map[header] = append(cdp_final_map[header], count_stats.mean_se.Mean,
+					count_stats.mean_se.Se, count_stats_2.mean_se.Mean, count_stats_2.mean_se.Se)
+			default:
+				cdp_final_map[header] = append(cdp_final_map[header], count_stats.mean_se.Mean/count_stats.dup,
+					count_stats.mean_se.Se/count_stats.dup, count_stats_2.mean_se.Mean/count_stats_2.dup, count_stats_2.mean_se.Se/count_stats_2.dup)
+			}
+		}
+	}
+	return cdp_final_map
+}
+
+
+
 //CompareToCsv writes the output to a csv file.
 func CompareToCsv(cdp_alignment_map map[string][]float64, nt int, out_prefix string) {
 	alignments := [][]string{
@@ -110,7 +129,14 @@ func CompareToCsv(cdp_alignment_map map[string][]float64, nt int, out_prefix str
 			strconv.FormatFloat(count_stats[3], 'f', 8, 64)}
 		alignments = append(alignments, alignment)
 	}
-	out_file := out_prefix + "_" + strconv.Itoa(nt) + ".csv"
+	var out_file string
+	switch{
+	case nt>0:
+		out_file = out_prefix + "_" + strconv.Itoa(nt) + ".csv"
+	default:
+		out_file = out_prefix + "_miR.csv"
+	}
+
 	out_dir := filepath.Dir(out_file)
 	os.MkdirAll(out_dir,0777)
 	f, err := os.Create(out_file)

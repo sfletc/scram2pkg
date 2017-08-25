@@ -168,3 +168,24 @@ func TestAlign(t *testing.T) {
 	}
 
 }
+
+func TestMirAlign(t *testing.T) {
+	test_mir_ref := MirLoad("./test_data/test_mir_align.fa")
+	var seq_files []string
+	seq_files = append(seq_files, "./test_data/test_seq_6.fa")
+	test_seq := SeqLoad(seq_files, "cfa", "nil", 1, 32, 1.0, false)
+	test_align_1 := AlignMirnas(test_seq, test_mir_ref)
+	test_align_2 := AlignMirnas(test_seq, test_mir_ref)
+	noSplitMap := MirnaCompare(test_align_1, test_align_2, true)
+	splitMap := MirnaCompare(test_align_1, test_align_2, false)
+	shouldBeNoSplit := map[string][]float64{"mir_1": {500000, 0, 500000, 0},"mir_3": {500000, 0, 500000, 0},"mir_2": {250000, 0, 250000, 0}}
+	shouldBeSplit := map[string][]float64{"mir_1": {250000, 0, 250000, 0},"mir_3": {250000, 0, 250000, 0},"mir_2": {250000, 0, 250000, 0}}
+	eq_1 := reflect.DeepEqual(noSplitMap, shouldBeNoSplit)
+	if eq_1 == false {
+		t.Error("noSplit mir alignments are not equal")
+	}
+	eq_2 := reflect.DeepEqual(splitMap, shouldBeSplit)
+	if eq_2 == false {
+		t.Error("split mir alignments are not equal")
+	}
+}
