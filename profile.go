@@ -1,4 +1,4 @@
-package scram2pkg
+package scramPkg
 
 import (
 	"encoding/csv"
