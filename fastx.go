@@ -42,16 +42,16 @@ func SeqLoad(seq_files []string, file_type string, adapter string, min_len int, 
 	for a := 0; a < len(seq_files); a++ {
 		switch{
 		case file_type == "cfa":
-			fmt.Println("\nSCRAM is attempting to load read files in the default collapsed FASTA format")
+			if a == 0 {fmt.Println("\nSCRAM is attempting to load read files in the default collapsed FASTA format")}
 			go loadCfaFile(file_names, srna_maps, min_len, max_len, min_count, "-", noNorm, wg)
 		case file_type == "clean":
-			fmt.Println("\nSCRAM is attempting to load read files in BGI clean format")
-			go loadCfaFile(file_names, srna_maps, min_len, max_len, min_count, " ", noNorm,wg)
+			if a == 0 {fmt.Println("\nSCRAM is attempting to load read files in BGI clean format")
+			go loadCfaFile(file_names, srna_maps, min_len, max_len, min_count, " ", noNorm,wg)}
 		case file_type == "fa":
-			fmt.Println("\nSCRAM is attempting to load read files in FASTA format")
+			if a == 0 {fmt.Println("\nSCRAM is attempting to load read files in FASTA format")}
 			go loadFastx(file_names, []byte(">"), adapter, srna_maps, min_len, max_len, min_count, noNorm,wg)
 		case file_type == "fq":
-			fmt.Println("\nSCRAM is attempting to load read files in FASTQ format")
+			if a == 0 {fmt.Println("\nSCRAM is attempting to load read files in FASTQ format")}
 			go loadFastx(file_names, []byte("@"), adapter, srna_maps, min_len, max_len, min_count, noNorm,wg)
 		}
 	}
