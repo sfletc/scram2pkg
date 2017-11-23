@@ -6,143 +6,281 @@ import (
 	"log"
 	"math"
 	"os"
-	"strconv"
 	"path/filepath"
+	"strconv"
 )
 
 //CompareNoSplitCounts takes and alignment map and returns a map with the ref_header as key and the
 //mean_se (mean and standard error) of aligned reads for that ref seq as value.  Read counts are NOT split by the number
 //of times a read aligns to all reference sequences.
-func CompareNoSplitCounts(alignment_map map[string]map[string][]int, seq_map map[string]*mean_se) map[string]mean_se {
-	cdp_alignment_map := make(map[string]mean_se)
-	for header, alignment := range alignment_map {
-		var counts float64
-		var counts_err []float64 //error_shutdown this
+func CompareNoSplitCounts(alignmentMap map[string]map[string][]int, seqMap map[string]interface{}) map[string]interface{} {
+	//cdp_alignment_map := make(map[string]meanSe)
+	cdpAlignmentMap := make(map[string]interface{})
+	for header, alignment := range alignmentMap {
+		var headerMeanCounts float64
+		var meanCountsErr []float64
+		var headerCounts []float64
+		firstPos :=true
 		for srna, pos := range alignment {
-			counts += seq_map[srna].Mean * float64(len(pos))
-			counts_err = append(counts_err, seq_map[srna].Se*float64(len(pos)))
+
+			switch v := seqMap[srna].(type){
+
+			case *meanSe:
+				headerMeanCounts += v.Mean * float64(len(pos))
+				meanCountsErr = append(meanCountsErr, v.Se*float64(len(pos)))
+			case *[]float64:
+				if firstPos {
+					headerCounts=make([]float64,len(*v))
+					firstPos =false
+				}
+				countPos :=0
+				for _,i :=range*v{
+					headerCounts[countPos]+=i*float64(len(pos))
+					countPos++
+				}
+				}
 		}
-		var err_sq_sum float64
-		for _, errs := range counts_err {
-			err_sq_sum += errs * errs
+		if meanCountsErr!=nil{
+			cdpAlignmentMap = calcHeaderMeanSe(meanCountsErr, headerMeanCounts, cdpAlignmentMap, header)
+		} else{
+			cdpAlignmentMap[header]=headerCounts
 		}
-		cdp_alignment_map = calc_header_mean_se(counts_err, counts, cdp_alignment_map, header)
 	}
-	return cdp_alignment_map
+	return cdpAlignmentMap
 }
 
 //CompareSplitCounts takes and alignment map and returns a map with the ref_header as key and the
 //mean_se (mean and standard error) of aligned reads for that ref seq as value.  Read counts are split by the number
 //of times a read aligns to all reference sequences.
-func CompareSplitCounts(alignment_map map[string]map[string][]int, seq_map map[string]*mean_se) map[string]mean_se {
-	cdp_alignment_map := make(map[string]mean_se)
+func CompareSplitCounts(alignmentMap map[string]map[string][]int, seqMap map[string]interface{}) map[string]interface{} {
+	cdpAlignmentMap := make(map[string]interface{})
 	//Calc. no. of times each read aligns
-	srna_alignment_map := calc_times_read_aligns(alignment_map)
-	for header, alignment := range alignment_map {
-		var counts float64
-		var counts_err []float64
+	srnaAlignmentMap := calcTimesReadAligns(alignmentMap)
+	for header, alignment := range alignmentMap {
+		var headerMeanCounts float64
+		var meanCountsErr []float64
+		var headerCounts []float64
+		firstPos :=true
 		for srna, pos := range alignment {
-			counts += seq_map[srna].Mean * float64(len(pos)) / float64(srna_alignment_map[srna])
-			// should be err=sqrt(x^2/n) for each alignment ??
-			// They are perfectly correlated (dependent), so maybe not?
-			counts_err = append(counts_err,
-				seq_map[srna].Se*float64(len(pos))/float64(srna_alignment_map[srna]))
-			//counts_err = append(counts_err, (math.Sqrt((seq_map[srna].Se*seq_map[srna].Se)/
-			// float64(srna_alignment_map[srna])))*float64(len(pos)))
+			switch v := seqMap[srna].(type) {
+			case *meanSe:
+					headerMeanCounts += v.Mean * float64(len(pos)) / float64(srnaAlignmentMap[srna])
+				// should be err=sqrt(x^2/n) for each alignment ??
+				// They are perfectly correlated (dependent), so maybe not?
+					meanCountsErr = append(meanCountsErr,
+						v.Se*float64(len(pos))/float64(srnaAlignmentMap[srna]))
+				//counts_err = append(counts_err, (math.Sqrt((seq_map[srna].Se*seq_map[srna].Se)/
+				// float64(srna_alignment_map[srna])))*float64(len(pos)))
+			case *[]float64:
+				if firstPos {
+					headerCounts=make([]float64,len(*v))
+					firstPos =false
+				}
+				countPos :=0
+				for _,i :=range*v{
+					headerCounts[countPos]+=i*float64(len(pos))/float64(srnaAlignmentMap[srna])
+					countPos++
+				}
+
+				}
 		}
-		cdp_alignment_map = calc_header_mean_se(counts_err, counts, cdp_alignment_map, header)
+		if meanCountsErr!=nil{
+			cdpAlignmentMap = calcHeaderMeanSe(meanCountsErr, headerMeanCounts, cdpAlignmentMap, header)
+		} else{
+			cdpAlignmentMap[header]=headerCounts
+		}
 	}
-	return cdp_alignment_map
+	return cdpAlignmentMap
 }
 
 //Calculates the number of times an aligned read aligns
-func calc_times_read_aligns(alignment_map map[string]map[string][]int) map[string]int {
-	srna_alignment_map := make(map[string]int)
-	for _, alignment := range alignment_map {
+func calcTimesReadAligns(alignmentMap map[string]map[string][]int) map[string]int {
+	srnaAlignmentMap := make(map[string]int)
+	for _, alignment := range alignmentMap {
 		for srna, pos := range alignment {
-			if _, ok := srna_alignment_map[srna]; ok {
-				srna_alignment_map[srna] += len(pos)
+			if _, ok := srnaAlignmentMap[srna]; ok {
+				srnaAlignmentMap[srna] += len(pos)
 			} else {
-				srna_alignment_map[srna] = len(pos)
+				srnaAlignmentMap[srna] = len(pos)
 			}
 		}
 	}
-	return srna_alignment_map
+	return srnaAlignmentMap
 }
 
 //Calculates the mean  and se of alignments to a header
-func calc_header_mean_se(counts_err []float64, counts float64, cdp_alignment_map map[string]mean_se,
-	header string) map[string]mean_se {
-	var err_sq_sum float64
-	for _, errs := range counts_err {
-		err_sq_sum += errs * errs
+func calcHeaderMeanSe(countsErr []float64, counts float64, cdpAlignmentMap map[string]interface{},
+	header string) map[string]interface{} {
+	var errSqSum float64
+	for _, errs := range countsErr {
+		errSqSum += errs * errs
 	}
-	ref_align_err := math.Sqrt(err_sq_sum)
-	cdp_counts_and_err := mean_se{counts, ref_align_err}
-	cdp_alignment_map[header] = cdp_counts_and_err
-	return cdp_alignment_map
+	refAlignErr := math.Sqrt(errSqSum)
+	cdpCountsAndErr := meanSe{counts, refAlignErr}
+	cdpAlignmentMap[header] = cdpCountsAndErr
+	return cdpAlignmentMap
 }
 
 //Compare combines individual alignments for set sets of sequences (treatments).  It returns a map of ref header
 //as key and a slice of set 1 mean/se and set2 mean/se as value.
-func Compare(counts_map_1 map[string]mean_se, counts_map_2 map[string]mean_se) map[string][]float64 {
-	cdp_final_map := make(map[string][]float64)
+func Compare(countsMap1 map[string]interface{}, countsMap2 map[string]interface{}) map[string]interface{} {
+	cdpFinalMap := make(map[string]interface{})
 	//TODO: This only includes if BOTH maps have a non-zero count alignment - perhaps should mod?
-	for header, count_stats := range counts_map_1 {
-		if count_stats_2, ok := counts_map_2[header]; ok {
-			cdp_final_map[header] = append(cdp_final_map[header], count_stats.Mean,
-				count_stats.Se, count_stats_2.Mean, count_stats_2.Se)
-		}
-	}
-	return cdp_final_map
-}
+	for header, countStats := range countsMap1 {
+		if countStats2, ok := countsMap2[header]; ok {
+			switch v := countStats.(type){
+			case meanSe:
+				cdpFinalMap[header] = compMeanSeOutput{}
+				cdpFinalMap[header] = cdpFinalMap[header].(compMeanSeOutput).append(
+					v.Mean,
+					v.Se,
+					countStats2.(meanSe).Mean,
+					countStats2.(meanSe).Se)
+			case []float64:
 
-func MirnaCompare(mirna_alignment_map_1 map[string]*mean_se_dup, mirna_alignment_map_2 map[string]*mean_se_dup, noSplit bool) map[string][]float64 {
-	cdp_final_map := make(map[string][]float64)
-	for header, count_stats := range mirna_alignment_map_1 {
-		if count_stats_2, ok := mirna_alignment_map_2[header]; ok {
-			switch {
-			case noSplit == true:
-				cdp_final_map[header] = append(cdp_final_map[header], count_stats.mean_se.Mean,
-					count_stats.mean_se.Se, count_stats_2.mean_se.Mean, count_stats_2.mean_se.Se)
-			default:
-				cdp_final_map[header] = append(cdp_final_map[header], count_stats.mean_se.Mean/count_stats.dup,
-					count_stats.mean_se.Se/count_stats.dup, count_stats_2.mean_se.Mean/count_stats_2.dup, count_stats_2.mean_se.Se/count_stats_2.dup)
+				cdpFinalMap[header] = countsOutput{}
+				pos := 0
+				for pos < len(v) {
+					cdpFinalMap[header] = cdpFinalMap[header].(countsOutput).append(v[pos])
+					pos++
+				}
+				pos = 0
+				for pos < len(countStats2.([]float64)) {
+					cdpFinalMap[header] = cdpFinalMap[header].(countsOutput).append(countStats2.([]float64)[pos])
+					pos++
+				}
+
 			}
 		}
 	}
-	return cdp_final_map
+	return cdpFinalMap
 }
 
+type compMeanSeOutput struct {
+	output []float64
+}
 
+func (f compMeanSeOutput) append(a ...float64) compMeanSeOutput {
+	for _, i := range a {
+		f.output = append(f.output, i)
+	}
+	return f
+}
+
+type countsOutput struct {
+	output []float64
+}
+
+func (f countsOutput) append(a ...float64) countsOutput {
+	for _, i := range a {
+		f.output = append(f.output, i)
+	}
+	return f
+}
+
+func MirnaCompare(mirnaAlignmentMap1 map[string]interface{},
+	mirnaAlignmentMap2 map[string]interface{}, noSplit bool) map[string]interface{} {
+
+	cdpFinalMap := make(map[string]interface{})
+	for header, countStats := range mirnaAlignmentMap1 {
+		if countStats2, ok := mirnaAlignmentMap2[header]; ok {
+			//assume count_stats.(type) ==  count_stats_2.(type)
+			switch v := countStats.(type) {
+			case *mean_se_dup:
+				cdpFinalMap[header] = compMeanSeOutput{}
+				switch {
+				case noSplit == true:
+
+					cdpFinalMap[header] = cdpFinalMap[header].(compMeanSeOutput).append(
+						v.mean_se.(*meanSe).Mean,
+						v.mean_se.(*meanSe).Se,
+						countStats2.(*mean_se_dup).mean_se.(*meanSe).Mean,
+						countStats2.(*mean_se_dup).mean_se.(*meanSe).Se)
+				default:
+
+					cdpFinalMap[header] = cdpFinalMap[header].(compMeanSeOutput).append(
+						v.mean_se.(*meanSe).Mean/v.dup,
+						v.mean_se.(*meanSe).Se/v.dup,
+						countStats2.(*mean_se_dup).mean_se.(*meanSe).Mean/countStats2.(*mean_se_dup).dup,
+						countStats2.(*mean_se_dup).mean_se.(*meanSe).Se/countStats2.(*mean_se_dup).dup)
+				}
+			case *counts_dup:
+				cdpFinalMap[header] = countsOutput{}
+				switch {
+				case noSplit == true:
+					cdpFinalMap[header] = cdpFinalMap[header].(countsOutput).append(v.counts...)
+					cdpFinalMap[header] = cdpFinalMap[header].(countsOutput).append(countStats2.(*counts_dup).counts...)
+				default:
+					pos := 0
+					for pos < len(v.counts) {
+						cdpFinalMap[header] = cdpFinalMap[header].(countsOutput).append(v.counts[pos] / v.dup)
+						pos++
+					}
+					pos = 0
+					for pos < len(countStats2.(*counts_dup).counts) {
+						cdpFinalMap[header] = cdpFinalMap[header].(countsOutput).append(countStats2.(*counts_dup).counts[pos] / v.dup)
+						pos++
+					}
+				}
+			}
+		}
+	}
+	return cdpFinalMap
+}
 
 //CompareToCsv writes the output to a csv file.
-func CompareToCsv(cdp_alignment_map map[string][]float64, nt int, out_prefix string) {
-	alignments := [][]string{
-		{"Header", "Mean count 1", "Std. err 1", "Mean count 2", "Std. err 2"},
+func CompareToCsv(cdpAlignmentMap map[string]interface{}, nt int, outPrefix string, aFileOrder []string, bFileOrder []string) {
+	firstLine := true
+	var alignments [][]string
+
+	for header, countStats := range cdpAlignmentMap {
+		switch v := countStats.(type) {
+		case compMeanSeOutput:
+			if firstLine {
+				alignments= append(alignments,[]string{"Header", "Mean count 1", "Std. err 1", "Mean count 2",
+					"Std. err 2"})
+				firstLine = false
+			} else {
+				alignment := []string{header,
+					strconv.FormatFloat(v.output[0], 'f', 3, 64),
+					strconv.FormatFloat(v.output[1], 'f', 8, 64),
+					strconv.FormatFloat(v.output[2], 'f', 3, 64),
+					strconv.FormatFloat(v.output[3], 'f', 8, 64)}
+				alignments = append(alignments, alignment)
+			}
+		case countsOutput:
+			if firstLine {
+				alignment := []string{"Header"}
+				alignment=append(alignment,aFileOrder...)
+				alignment=append(alignment,bFileOrder...)
+				alignments =append(alignments,alignment)
+				firstLine=false
+			}
+			alignment := []string{header}
+			pos := 0
+			for pos < len(v.output) {
+				alignment = append(alignment, strconv.FormatFloat(v.output[pos], 'f', 3, 64))
+
+				pos ++
+				}
+			alignments = append(alignments,alignment)
+
+			}
 	}
-	for header, count_stats := range cdp_alignment_map {
-		alignment := []string{header,
-			strconv.FormatFloat(count_stats[0], 'f', 3, 64),
-			strconv.FormatFloat(count_stats[1], 'f', 8, 64),
-			strconv.FormatFloat(count_stats[2], 'f', 3, 64),
-			strconv.FormatFloat(count_stats[3], 'f', 8, 64)}
-		alignments = append(alignments, alignment)
-	}
-	var out_file string
-	switch{
-	case nt>0:
-		out_file = out_prefix + "_" + strconv.Itoa(nt) + ".csv"
+	var outFile string
+	switch {
+	case nt > 0:
+		outFile = outPrefix + "_" + strconv.Itoa(nt) + ".csv"
 	default:
-		out_file = out_prefix + "_miR.csv"
+		outFile = outPrefix + "_miR.csv"
 	}
 
-	out_dir := filepath.Dir(out_file)
-	os.MkdirAll(out_dir,0777)
-	f, err := os.Create(out_file)
+	outDir := filepath.Dir(outFile)
+	os.MkdirAll(outDir, 0777)
+	f, err := os.Create(outFile)
 	if err != nil {
 		fmt.Println("Can't save to file")
-		error_shutdown()
+		errorShutdown()
 	}
 	w := csv.NewWriter(f)
 	w.WriteAll(alignments)
