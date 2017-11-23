@@ -20,30 +20,30 @@ func CompareNoSplitCounts(alignmentMap map[string]map[string][]int, seqMap map[s
 		var headerMeanCounts float64
 		var meanCountsErr []float64
 		var headerCounts []float64
-		firstPos :=true
+		firstPos := true
 		for srna, pos := range alignment {
 
-			switch v := seqMap[srna].(type){
+			switch v := seqMap[srna].(type) {
 
 			case *meanSe:
 				headerMeanCounts += v.Mean * float64(len(pos))
 				meanCountsErr = append(meanCountsErr, v.Se*float64(len(pos)))
 			case *[]float64:
 				if firstPos {
-					headerCounts=make([]float64,len(*v))
-					firstPos =false
+					headerCounts = make([]float64, len(*v))
+					firstPos = false
 				}
-				countPos :=0
-				for _,i :=range*v{
-					headerCounts[countPos]+=i*float64(len(pos))
+				countPos := 0
+				for _, i := range *v {
+					headerCounts[countPos] += i * float64(len(pos))
 					countPos++
 				}
-				}
+			}
 		}
-		if meanCountsErr!=nil{
+		if meanCountsErr != nil {
 			cdpAlignmentMap = calcHeaderMeanSe(meanCountsErr, headerMeanCounts, cdpAlignmentMap, header)
-		} else{
-			cdpAlignmentMap[header]=headerCounts
+		} else {
+			cdpAlignmentMap[header] = headerCounts
 		}
 	}
 	return cdpAlignmentMap
@@ -60,34 +60,34 @@ func CompareSplitCounts(alignmentMap map[string]map[string][]int, seqMap map[str
 		var headerMeanCounts float64
 		var meanCountsErr []float64
 		var headerCounts []float64
-		firstPos :=true
+		firstPos := true
 		for srna, pos := range alignment {
 			switch v := seqMap[srna].(type) {
 			case *meanSe:
-					headerMeanCounts += v.Mean * float64(len(pos)) / float64(srnaAlignmentMap[srna])
+				headerMeanCounts += v.Mean * float64(len(pos)) / float64(srnaAlignmentMap[srna])
 				// should be err=sqrt(x^2/n) for each alignment ??
 				// They are perfectly correlated (dependent), so maybe not?
-					meanCountsErr = append(meanCountsErr,
-						v.Se*float64(len(pos))/float64(srnaAlignmentMap[srna]))
+				meanCountsErr = append(meanCountsErr,
+					v.Se*float64(len(pos))/float64(srnaAlignmentMap[srna]))
 				//counts_err = append(counts_err, (math.Sqrt((seq_map[srna].Se*seq_map[srna].Se)/
 				// float64(srna_alignment_map[srna])))*float64(len(pos)))
 			case *[]float64:
 				if firstPos {
-					headerCounts=make([]float64,len(*v))
-					firstPos =false
+					headerCounts = make([]float64, len(*v))
+					firstPos = false
 				}
-				countPos :=0
-				for _,i :=range*v{
-					headerCounts[countPos]+=i*float64(len(pos))/float64(srnaAlignmentMap[srna])
+				countPos := 0
+				for _, i := range *v {
+					headerCounts[countPos] += i * float64(len(pos)) / float64(srnaAlignmentMap[srna])
 					countPos++
 				}
 
-				}
+			}
 		}
-		if meanCountsErr!=nil{
+		if meanCountsErr != nil {
 			cdpAlignmentMap = calcHeaderMeanSe(meanCountsErr, headerMeanCounts, cdpAlignmentMap, header)
-		} else{
-			cdpAlignmentMap[header]=headerCounts
+		} else {
+			cdpAlignmentMap[header] = headerCounts
 		}
 	}
 	return cdpAlignmentMap
@@ -128,7 +128,7 @@ func Compare(countsMap1 map[string]interface{}, countsMap2 map[string]interface{
 	//TODO: This only includes if BOTH maps have a non-zero count alignment - perhaps should mod?
 	for header, countStats := range countsMap1 {
 		if countStats2, ok := countsMap2[header]; ok {
-			switch v := countStats.(type){
+			switch v := countStats.(type) {
 			case meanSe:
 				cdpFinalMap[header] = compMeanSeOutput{}
 				cdpFinalMap[header] = cdpFinalMap[header].(compMeanSeOutput).append(
@@ -237,7 +237,7 @@ func CompareToCsv(cdpAlignmentMap map[string]interface{}, nt int, outPrefix stri
 		switch v := countStats.(type) {
 		case compMeanSeOutput:
 			if firstLine {
-				alignments= append(alignments,[]string{"Header", "Mean count 1", "Std. err 1", "Mean count 2",
+				alignments = append(alignments, []string{"Header", "Mean count 1", "Std. err 1", "Mean count 2",
 					"Std. err 2"})
 				firstLine = false
 			} else {
@@ -251,21 +251,21 @@ func CompareToCsv(cdpAlignmentMap map[string]interface{}, nt int, outPrefix stri
 		case countsOutput:
 			if firstLine {
 				alignment := []string{"Header"}
-				alignment=append(alignment,aFileOrder...)
-				alignment=append(alignment,bFileOrder...)
-				alignments =append(alignments,alignment)
-				firstLine=false
+				alignment = append(alignment, aFileOrder...)
+				alignment = append(alignment, bFileOrder...)
+				alignments = append(alignments, alignment)
+				firstLine = false
 			}
 			alignment := []string{header}
 			pos := 0
 			for pos < len(v.output) {
 				alignment = append(alignment, strconv.FormatFloat(v.output[pos], 'f', 3, 64))
 
-				pos ++
-				}
-			alignments = append(alignments,alignment)
-
+				pos++
 			}
+			alignments = append(alignments, alignment)
+
+		}
 	}
 	var outFile string
 	switch {

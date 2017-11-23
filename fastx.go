@@ -10,10 +10,10 @@ import (
 	"github.com/montanaflynn/stats"
 	"math"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
-	"path"
 )
 
 func errorShutdown() {
@@ -27,7 +27,7 @@ func errorShutdown() {
 func SeqLoad(seqFiles []string, fileType string, adapter string, minLen int, maxLen int,
 	minCount float64, noNorm bool) map[string]interface{} {
 	noOfFiles, srnaMaps := loadFiles(seqFiles, fileType, minLen, maxLen, minCount, noNorm, adapter)
-	seqMapAllCounts,_ := compileCounts(srnaMaps, noOfFiles, minCount)
+	seqMapAllCounts, _ := compileCounts(srnaMaps, noOfFiles, minCount)
 	seqMap := calcMeanSe(seqMapAllCounts, noOfFiles, minCount)
 	return seqMap
 }
@@ -36,7 +36,7 @@ func SeqLoad(seqFiles []string, fileType string, adapter string, minLen int, max
 // It returns a map with a read sequence as key and a slice of normalized or raw individual read counts as a value.
 // Little format checking is  performed.  It is required that the input file is correctly formatted.
 func IndvSeqLoad(seqFiles []string, fileType string, adapter string, minLen int, maxLen int,
-	minCount float64, noNorm bool) (map[string]interface{},[]string) {
+	minCount float64, noNorm bool) (map[string]interface{}, []string) {
 	noOfFiles, srnaMaps := loadFiles(seqFiles, fileType, minLen, maxLen, minCount, noNorm, adapter)
 	seqMapAllCounts, loadOrder := compileCounts(srnaMaps, noOfFiles, minCount)
 	return seqMapAllCounts, loadOrder
@@ -134,7 +134,6 @@ func loadCfaFile(fileNames chan string, srnaMaps chan map[string]map[string]floa
 	}
 	finalMap := map[string]map[string]float64{fileName: srnaMap}
 	srnaMaps <- finalMap
-
 
 	fmt.Println(fileName + " - " + humanize.Comma(int64(totalCount)) + " reads processed")
 	wg.Done()
@@ -268,14 +267,14 @@ func checkHeaderError(headerLine []string, file_name string) error {
 }
 
 // Compile_counts generates a map wit read seq as key and a slice of normalised counts for each read file
-func compileCounts(srna_maps chan map[string]map[string]float64, no_of_files int, min_count float64) (map[string]interface{},[]string) {
+func compileCounts(srna_maps chan map[string]map[string]float64, no_of_files int, min_count float64) (map[string]interface{}, []string) {
 	// map [srna:[count1,count2....], ...]
 	seq_map_all_counts := make(map[string]interface{})
 	var load_order []string
-	pos:=0
+	pos := 0
 	for singleSeqMap := range srna_maps {
-		for file,seqMap := range singleSeqMap {
-			load_order=append(load_order, path.Base(file))
+		for file, seqMap := range singleSeqMap {
+			load_order = append(load_order, path.Base(file))
 			for srna, count := range seqMap {
 				if _, ok := seq_map_all_counts[srna]; ok {
 					// a:= append(*seq_map_all_counts[srna].(*[]float64), count)
@@ -292,10 +291,10 @@ func compileCounts(srna_maps chan map[string]map[string]float64, no_of_files int
 			pos++
 		}
 	}
-	if min_count > 1{
+	if min_count > 1 {
 		removeUnderMinCount(seq_map_all_counts)
 	}
-	return seq_map_all_counts,load_order
+	return seq_map_all_counts, load_order
 }
 
 // Remove read if its count is under the specified minimum

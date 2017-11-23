@@ -34,7 +34,7 @@ func TestIndvSeqLoad_single(t *testing.T) {
 
 	var seq_files []string
 	seq_files = append(seq_files, "./test_data/test_seq_1.fa")
-	test_seq,_ := IndvSeqLoad(seq_files, "cfa", "nil", 18, 32, 2.0, false)
+	test_seq, _ := IndvSeqLoad(seq_files, "cfa", "nil", 18, 32, 2.0, false)
 	should_be := make(map[string]interface{})
 	var indv_counts *[]float64
 	indv_counts = &[]float64{500000.0}
@@ -123,7 +123,7 @@ func TestSeqLoad_multi(t *testing.T) {
 func TestIndvSeqLoad_multi(t *testing.T) {
 	var seq_files []string
 	seq_files = append(seq_files, "./test_data/test_seq_1.fa", "./test_data/test_seq_2.fa")
-	test_seq,_ := IndvSeqLoad(seq_files, "cfa", "nil", 18, 32, 1.0,false)
+	test_seq, _ := IndvSeqLoad(seq_files, "cfa", "nil", 18, 32, 1.0, false)
 	fmt.Println(test_seq)
 	fmt.Println(test_seq["ACGCTGATGCATGCATCGACTAGC"])
 	should_be := make(map[string]interface{})
@@ -133,16 +133,14 @@ func TestIndvSeqLoad_multi(t *testing.T) {
 	indv_counts = &[]float64{500000.0, 250000.0}
 	should_be["AAAAAAAAAAAAAAAAAAAAAAAA"] = indv_counts
 
-
 	indv_counts = &[]float64{250000.0, 500000.0}
 	should_be["GGGGGGGGGGGGGGGGGGGGGGGG"] = indv_counts
-
 
 	indv_counts = &[]float64{250000.0, 250000.0}
 	should_be["GGGGGGGGGGGGGGGGGGGGGGGC"] = indv_counts
 
 	for read, counts := range test_seq {
-		fmt.Println(read,counts)
+		fmt.Println(read, counts)
 	}
 
 	eq := reflect.DeepEqual(test_seq, should_be)
@@ -219,7 +217,6 @@ func TestAlign(t *testing.T) {
 
 }
 
-
 func TestCompareAlign(t *testing.T) {
 	test_ref := RefLoad("./test_data/test_ref_align.fa")
 
@@ -228,25 +225,24 @@ func TestCompareAlign(t *testing.T) {
 	test_seq := SeqLoad(seq_files, "cfa", "nil", 18, 32, 1.0, false)
 	test_align_1 := AlignReads(test_seq, test_ref, 24)
 	test_align_2 := AlignReads(test_seq, test_ref, 24)
-	fmt.Println(test_align_1,test_align_2)
+	fmt.Println(test_align_1, test_align_2)
 	test_align_1_split := CompareSplitCounts(test_align_1, test_seq)
 	test_align_2_split := CompareSplitCounts(test_align_2, test_seq)
-	fmt.Println(test_align_1_split,test_align_2_split)
+	fmt.Println(test_align_1_split, test_align_2_split)
 	test_align_1_nosplit := CompareNoSplitCounts(test_align_1, test_seq)
 	test_align_2_nosplit := CompareNoSplitCounts(test_align_2, test_seq)
-	fmt.Println(test_align_1_nosplit,test_align_2_nosplit)
-	compare_split :=Compare(test_align_1_split,test_align_2_split)
-	compare_no_split :=Compare(test_align_1_nosplit,test_align_2_nosplit)
+	fmt.Println(test_align_1_nosplit, test_align_2_nosplit)
+	compare_split := Compare(test_align_1_split, test_align_2_split)
+	compare_no_split := Compare(test_align_1_nosplit, test_align_2_nosplit)
 	fmt.Println(compare_split)
-
 
 	compare_split_should_be := make(map[string]interface{})
 	compare_split_should_be["ref_1"] = compMeanSeOutput{}
-	compare_split_should_be["ref_1"] = compare_split_should_be["ref_1"].(compMeanSeOutput).append(200000.0,0.0,200000.0,0.0)
+	compare_split_should_be["ref_1"] = compare_split_should_be["ref_1"].(compMeanSeOutput).append(200000.0, 0.0, 200000.0, 0.0)
 	compare_split_should_be["ref_2"] = compMeanSeOutput{}
-	compare_split_should_be["ref_2"] = compare_split_should_be["ref_2"].(compMeanSeOutput).append(350000.0,0.0,350000.0,0.0)
+	compare_split_should_be["ref_2"] = compare_split_should_be["ref_2"].(compMeanSeOutput).append(350000.0, 0.0, 350000.0, 0.0)
 	compare_split_should_be["ref_3"] = compMeanSeOutput{}
-	compare_split_should_be["ref_3"] = compare_split_should_be["ref_3"].(compMeanSeOutput).append(200000.0,0.0,200000.0,0.0)
+	compare_split_should_be["ref_3"] = compare_split_should_be["ref_3"].(compMeanSeOutput).append(200000.0, 0.0, 200000.0, 0.0)
 
 	fmt.Println(compare_split_should_be)
 	eq := reflect.DeepEqual(compare_split, compare_split_should_be)
@@ -256,11 +252,11 @@ func TestCompareAlign(t *testing.T) {
 
 	compare_no_split_should_be := make(map[string]interface{})
 	compare_no_split_should_be["ref_1"] = compMeanSeOutput{}
-	compare_no_split_should_be["ref_1"] = compare_no_split_should_be["ref_1"].(compMeanSeOutput).append(1000000.0,0.0,1000000.0,0.0)
+	compare_no_split_should_be["ref_1"] = compare_no_split_should_be["ref_1"].(compMeanSeOutput).append(1000000.0, 0.0, 1000000.0, 0.0)
 	compare_no_split_should_be["ref_2"] = compMeanSeOutput{}
-	compare_no_split_should_be["ref_2"] = compare_no_split_should_be["ref_2"].(compMeanSeOutput).append(750000.0,0.0,750000.0,0.0)
+	compare_no_split_should_be["ref_2"] = compare_no_split_should_be["ref_2"].(compMeanSeOutput).append(750000.0, 0.0, 750000.0, 0.0)
 	compare_no_split_should_be["ref_3"] = compMeanSeOutput{}
-	compare_no_split_should_be["ref_3"] = compare_no_split_should_be["ref_3"].(compMeanSeOutput).append(1000000.0,0.0,1000000.0,0.0)
+	compare_no_split_should_be["ref_3"] = compare_no_split_should_be["ref_3"].(compMeanSeOutput).append(1000000.0, 0.0, 1000000.0, 0.0)
 	fmt.Println(compare_no_split)
 	fmt.Println(compare_no_split_should_be)
 	eq2 := reflect.DeepEqual(compare_no_split, compare_no_split_should_be)
@@ -273,31 +269,31 @@ func TestIndvCompareAlign(t *testing.T) {
 	test_ref := RefLoad("./test_data/test_ref_align.fa")
 
 	var seq_files []string
-	seq_files = append(seq_files, "./test_data/test_seq_1.fa","./test_data/test_seq_1.fa")
-	test_seq,_ := IndvSeqLoad(seq_files, "cfa", "nil", 18, 32, 1.0, false)
-	for key,value := range(test_seq){
-		fmt.Println(key,value)
+	seq_files = append(seq_files, "./test_data/test_seq_1.fa", "./test_data/test_seq_1.fa")
+	test_seq, _ := IndvSeqLoad(seq_files, "cfa", "nil", 18, 32, 1.0, false)
+	for key, value := range test_seq {
+		fmt.Println(key, value)
 	}
 	test_align_1 := AlignReads(test_seq, test_ref, 24)
 	test_align_2 := AlignReads(test_seq, test_ref, 24)
-	fmt.Println(test_align_1,test_align_2)
+	fmt.Println(test_align_1, test_align_2)
 	test_align_1_split := CompareSplitCounts(test_align_1, test_seq)
 	test_align_2_split := CompareSplitCounts(test_align_2, test_seq)
-	fmt.Println(test_align_1_split,test_align_2_split)
+	fmt.Println(test_align_1_split, test_align_2_split)
 	test_align_1_nosplit := CompareNoSplitCounts(test_align_1, test_seq)
 	test_align_2_nosplit := CompareNoSplitCounts(test_align_2, test_seq)
-	fmt.Println(test_align_1_nosplit,test_align_2_nosplit)
-	compare_split :=Compare(test_align_1_split,test_align_2_split)
-	compare_no_split :=Compare(test_align_1_nosplit,test_align_2_nosplit)
+	fmt.Println(test_align_1_nosplit, test_align_2_nosplit)
+	compare_split := Compare(test_align_1_split, test_align_2_split)
+	compare_no_split := Compare(test_align_1_nosplit, test_align_2_nosplit)
 	fmt.Println(compare_split)
 
 	compare_split_should_be := make(map[string]interface{})
 	compare_split_should_be["ref_1"] = countsOutput{}
-	compare_split_should_be["ref_1"] = compare_split_should_be["ref_1"].(countsOutput).append(200000.0,200000.0,200000.0,200000.0)
+	compare_split_should_be["ref_1"] = compare_split_should_be["ref_1"].(countsOutput).append(200000.0, 200000.0, 200000.0, 200000.0)
 	compare_split_should_be["ref_2"] = countsOutput{}
-	compare_split_should_be["ref_2"] = compare_split_should_be["ref_2"].(countsOutput).append(350000.0,350000.0,350000.0,350000.0)
+	compare_split_should_be["ref_2"] = compare_split_should_be["ref_2"].(countsOutput).append(350000.0, 350000.0, 350000.0, 350000.0)
 	compare_split_should_be["ref_3"] = countsOutput{}
-	compare_split_should_be["ref_3"] = compare_split_should_be["ref_3"].(countsOutput).append(200000.0,200000.0,200000.0,200000.0)
+	compare_split_should_be["ref_3"] = compare_split_should_be["ref_3"].(countsOutput).append(200000.0, 200000.0, 200000.0, 200000.0)
 
 	fmt.Println(compare_split_should_be)
 	eq := reflect.DeepEqual(compare_split, compare_split_should_be)
@@ -307,11 +303,11 @@ func TestIndvCompareAlign(t *testing.T) {
 	fmt.Println(compare_no_split)
 	compare_no_split_should_be := make(map[string]interface{})
 	compare_no_split_should_be["ref_1"] = countsOutput{}
-	compare_no_split_should_be["ref_1"] = compare_no_split_should_be["ref_1"].(countsOutput).append(1000000.0,1000000.0,1000000.0,1000000.0)
+	compare_no_split_should_be["ref_1"] = compare_no_split_should_be["ref_1"].(countsOutput).append(1000000.0, 1000000.0, 1000000.0, 1000000.0)
 	compare_no_split_should_be["ref_2"] = countsOutput{}
-	compare_no_split_should_be["ref_2"] = compare_no_split_should_be["ref_2"].(countsOutput).append(750000.0,750000.0,750000.0,750000.0)
+	compare_no_split_should_be["ref_2"] = compare_no_split_should_be["ref_2"].(countsOutput).append(750000.0, 750000.0, 750000.0, 750000.0)
 	compare_no_split_should_be["ref_3"] = countsOutput{}
-	compare_no_split_should_be["ref_3"] = compare_no_split_should_be["ref_3"].(countsOutput).append(1000000.0,1000000.0,1000000.0,1000000.0)
+	compare_no_split_should_be["ref_3"] = compare_no_split_should_be["ref_3"].(countsOutput).append(1000000.0, 1000000.0, 1000000.0, 1000000.0)
 	fmt.Println(compare_no_split)
 	fmt.Println(compare_no_split_should_be)
 	eq2 := reflect.DeepEqual(compare_no_split, compare_no_split_should_be)
@@ -320,45 +316,44 @@ func TestIndvCompareAlign(t *testing.T) {
 	}
 }
 
-
 func TestProfileAlign(t *testing.T) {
 	test_ref := RefLoad("./test_data/test_ref_align.fa")
 
 	var seq_files []string
 	seq_files = append(seq_files, "./test_data/test_seq_1.fa")
-	test_seq:= SeqLoad(seq_files, "cfa", "nil", 18, 32, 1.0, false)
+	test_seq := SeqLoad(seq_files, "cfa", "nil", 18, 32, 1.0, false)
 	test_align_1 := AlignReads(test_seq, test_ref, 24)
 
 	fmt.Println(test_align_1)
 	test_align_1_split := ProfileSplit(test_align_1, test_seq)
 	for ref, value := range test_align_1_split {
 		fmt.Println(ref)
-		for _,i := range *value.(*singleAlignments){
-			fmt.Println(i,i.Alignments)
+		for _, i := range *value.(*singleAlignments) {
+			fmt.Println(i, i.Alignments)
 		}
 	}
 	should_be_split := make(map[string]interface{})
 	combinedAlignments_1 := singleAlignments{}
-	alignment_1 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,1,"+",&meanSe{100000,0}}
-	alignment_2 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,2,"+",&meanSe{100000,0}}
-	combinedAlignments_1 = append(combinedAlignments_1,&alignment_1,&alignment_2)
+	alignment_1 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 1, "+", &meanSe{100000, 0}}
+	alignment_2 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 2, "+", &meanSe{100000, 0}}
+	combinedAlignments_1 = append(combinedAlignments_1, &alignment_1, &alignment_2)
 	should_be_split["ref_1"] = &combinedAlignments_1
 
 	combinedAlignments_2 := singleAlignments{}
-	alignment_3 := singleAlignment{"GGGGGGGGGGGGGGGGGGGGGGGG",1,1,"+",&meanSe{250000,0}}
-	alignment_4 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,26,"+",&meanSe{100000,0}}
-	combinedAlignments_2 = append(combinedAlignments_2,&alignment_3,&alignment_4)
+	alignment_3 := singleAlignment{"GGGGGGGGGGGGGGGGGGGGGGGG", 1, 1, "+", &meanSe{250000, 0}}
+	alignment_4 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 26, "+", &meanSe{100000, 0}}
+	combinedAlignments_2 = append(combinedAlignments_2, &alignment_3, &alignment_4)
 	should_be_split["ref_2"] = &combinedAlignments_2
 
 	combinedAlignments_3 := singleAlignments{}
-	alignment_5 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,1,"-",&meanSe{100000,0}}
-	alignment_6 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,2,"-",&meanSe{100000,0}}
-	combinedAlignments_3 = append(combinedAlignments_3,&alignment_5,&alignment_6)
+	alignment_5 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 1, "-", &meanSe{100000, 0}}
+	alignment_6 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 2, "-", &meanSe{100000, 0}}
+	combinedAlignments_3 = append(combinedAlignments_3, &alignment_5, &alignment_6)
 	should_be_split["ref_3"] = &combinedAlignments_3
 	for ref, value := range should_be_split {
 		fmt.Println(ref)
-		for _,i := range *value.(*singleAlignments){
-			fmt.Println(i,i.Alignments)
+		for _, i := range *value.(*singleAlignments) {
+			fmt.Println(i, i.Alignments)
 		}
 	}
 
@@ -371,21 +366,21 @@ func TestProfileAlign(t *testing.T) {
 
 	should_be_no_split := make(map[string]interface{})
 	combinedAlignments_4 := singleAlignments{}
-	alignment_7 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,1,"+",&meanSe{500000,0}}
-	alignment_8 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,2,"+",&meanSe{500000,0}}
-	combinedAlignments_4 = append(combinedAlignments_4,&alignment_7,&alignment_8)
+	alignment_7 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 1, "+", &meanSe{500000, 0}}
+	alignment_8 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 2, "+", &meanSe{500000, 0}}
+	combinedAlignments_4 = append(combinedAlignments_4, &alignment_7, &alignment_8)
 	should_be_no_split["ref_1"] = &combinedAlignments_4
 
 	combinedAlignments_5 := singleAlignments{}
-	alignment_9 := singleAlignment{"GGGGGGGGGGGGGGGGGGGGGGGG",1,1,"+",&meanSe{250000,0}}
-	alignment_10 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,26,"+",&meanSe{500000,0}}
-	combinedAlignments_5 = append(combinedAlignments_5,&alignment_9,&alignment_10)
+	alignment_9 := singleAlignment{"GGGGGGGGGGGGGGGGGGGGGGGG", 1, 1, "+", &meanSe{250000, 0}}
+	alignment_10 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 26, "+", &meanSe{500000, 0}}
+	combinedAlignments_5 = append(combinedAlignments_5, &alignment_9, &alignment_10)
 	should_be_no_split["ref_2"] = &combinedAlignments_5
 
 	combinedAlignments_6 := singleAlignments{}
-	alignment_11 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,1,"-",&meanSe{500000,0}}
-	alignment_12 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,2,"-",&meanSe{500000,0}}
-	combinedAlignments_6 = append(combinedAlignments_6,&alignment_11,&alignment_12)
+	alignment_11 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 1, "-", &meanSe{500000, 0}}
+	alignment_12 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 2, "-", &meanSe{500000, 0}}
+	combinedAlignments_6 = append(combinedAlignments_6, &alignment_11, &alignment_12)
 	should_be_no_split["ref_3"] = &combinedAlignments_6
 
 	eq2 := reflect.DeepEqual(should_be_no_split, test_align_1_no_split)
@@ -406,32 +401,32 @@ func TestProfileAlignIndv(t *testing.T) {
 	test_align_1_split := ProfileSplit(test_align_1, test_seq)
 	for ref, value := range test_align_1_split {
 		fmt.Println(ref)
-		for _,i := range *value.(*singleAlignments){
-			fmt.Println(i,i.Alignments)
+		for _, i := range *value.(*singleAlignments) {
+			fmt.Println(i, i.Alignments)
 		}
 	}
 	should_be_split := make(map[string]interface{})
 	combinedAlignments_1 := singleAlignments{}
-	alignment_1 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,1,"+",&[]float64{100000}}
-	alignment_2 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,2,"+",&[]float64{100000}}
-	combinedAlignments_1 = append(combinedAlignments_1,&alignment_1,&alignment_2)
+	alignment_1 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 1, "+", &[]float64{100000}}
+	alignment_2 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 2, "+", &[]float64{100000}}
+	combinedAlignments_1 = append(combinedAlignments_1, &alignment_1, &alignment_2)
 	should_be_split["ref_1"] = &combinedAlignments_1
 
 	combinedAlignments_2 := singleAlignments{}
-	alignment_3 := singleAlignment{"GGGGGGGGGGGGGGGGGGGGGGGG",1,1,"+",&[]float64{250000}}
-	alignment_4 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,26,"+",&[]float64{100000}}
-	combinedAlignments_2 = append(combinedAlignments_2,&alignment_3,&alignment_4)
+	alignment_3 := singleAlignment{"GGGGGGGGGGGGGGGGGGGGGGGG", 1, 1, "+", &[]float64{250000}}
+	alignment_4 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 26, "+", &[]float64{100000}}
+	combinedAlignments_2 = append(combinedAlignments_2, &alignment_3, &alignment_4)
 	should_be_split["ref_2"] = &combinedAlignments_2
 
 	combinedAlignments_3 := singleAlignments{}
-	alignment_5 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,1,"-",&[]float64{100000}}
-	alignment_6 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,2,"-",&[]float64{100000}}
-	combinedAlignments_3 = append(combinedAlignments_3,&alignment_5,&alignment_6)
+	alignment_5 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 1, "-", &[]float64{100000}}
+	alignment_6 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 2, "-", &[]float64{100000}}
+	combinedAlignments_3 = append(combinedAlignments_3, &alignment_5, &alignment_6)
 	should_be_split["ref_3"] = &combinedAlignments_3
 	for ref, value := range should_be_split {
 		fmt.Println(ref)
-		for _,i := range *value.(*singleAlignments){
-			fmt.Println(i,i.Alignments)
+		for _, i := range *value.(*singleAlignments) {
+			fmt.Println(i, i.Alignments)
 		}
 	}
 
@@ -444,21 +439,21 @@ func TestProfileAlignIndv(t *testing.T) {
 
 	should_be_no_split := make(map[string]interface{})
 	combinedAlignments_4 := singleAlignments{}
-	alignment_7 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,1,"+",&[]float64{500000}}
-	alignment_8 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,2,"+",&[]float64{500000}}
-	combinedAlignments_4 = append(combinedAlignments_4,&alignment_7,&alignment_8)
+	alignment_7 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 1, "+", &[]float64{500000}}
+	alignment_8 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 2, "+", &[]float64{500000}}
+	combinedAlignments_4 = append(combinedAlignments_4, &alignment_7, &alignment_8)
 	should_be_no_split["ref_1"] = &combinedAlignments_4
 
 	combinedAlignments_5 := singleAlignments{}
-	alignment_9 := singleAlignment{"GGGGGGGGGGGGGGGGGGGGGGGG",1,1,"+",&[]float64{250000}}
-	alignment_10 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,26,"+",&[]float64{500000}}
-	combinedAlignments_5 = append(combinedAlignments_5,&alignment_9,&alignment_10)
+	alignment_9 := singleAlignment{"GGGGGGGGGGGGGGGGGGGGGGGG", 1, 1, "+", &[]float64{250000}}
+	alignment_10 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 26, "+", &[]float64{500000}}
+	combinedAlignments_5 = append(combinedAlignments_5, &alignment_9, &alignment_10)
 	should_be_no_split["ref_2"] = &combinedAlignments_5
 
 	combinedAlignments_6 := singleAlignments{}
-	alignment_11 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,1,"-",&[]float64{500000}}
-	alignment_12 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA",5,2,"-",&[]float64{500000}}
-	combinedAlignments_6 = append(combinedAlignments_6,&alignment_11,&alignment_12)
+	alignment_11 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 1, "-", &[]float64{500000}}
+	alignment_12 := singleAlignment{"AAAAAAAAAAAAAAAAAAAAAAAA", 5, 2, "-", &[]float64{500000}}
+	combinedAlignments_6 = append(combinedAlignments_6, &alignment_11, &alignment_12)
 	should_be_no_split["ref_3"] = &combinedAlignments_6
 
 	eq2 := reflect.DeepEqual(should_be_no_split, test_align_1_no_split)
@@ -466,7 +461,6 @@ func TestProfileAlignIndv(t *testing.T) {
 		t.Error("Profile no split alignment is incorrect")
 	}
 }
-
 
 func TestMirAlign(t *testing.T) {
 	test_mir_ref := MirLoad("./test_data/test_mir_align.fa")
@@ -495,14 +489,11 @@ func TestMirAlign(t *testing.T) {
 	}
 }
 
-
-
-
 func TestIndvMirAlign(t *testing.T) {
 	test_mir_ref := MirLoad("./test_data/test_mir_align.fa")
 	var seq_files []string
 	seq_files = append(seq_files, "./test_data/test_seq_6.fa")
-	test_seq,_:= IndvSeqLoad(seq_files, "cfa", "nil", 1, 32, 1.0, false)
+	test_seq, _ := IndvSeqLoad(seq_files, "cfa", "nil", 1, 32, 1.0, false)
 	test_align_1 := AlignMirnas(test_seq, test_mir_ref)
 	test_align_2 := AlignMirnas(test_seq, test_mir_ref)
 	noSplitMap := MirnaCompare(test_align_1, test_align_2, true)

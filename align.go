@@ -2,7 +2,6 @@ package scramPkg
 
 import (
 	"sync"
-
 )
 
 //AlignReads aligns reads of  length nt to one or more reference sequences, with exact matches in forward or reverse
