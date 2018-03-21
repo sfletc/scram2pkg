@@ -17,7 +17,7 @@ import (
 )
 
 func errorShutdown() {
-	fmt.Println("\nExiting scram2")
+	fmt.Println("\nExiting scram")
 	os.Exit(1)
 }
 
@@ -28,7 +28,7 @@ func SeqLoad(seqFiles []string, fileType string, adapter string, minLen int, max
 	minCount float64, noNorm bool) map[string]interface{} {
 	noOfFiles, srnaMaps := loadFiles(seqFiles, fileType, minLen, maxLen, minCount, noNorm, adapter)
 	seqMapAllCounts, _ := compileCounts(srnaMaps, noOfFiles, minCount)
-	seqMap := calcMeanSe(seqMapAllCounts, noOfFiles, minCount)
+	seqMap := calcMeanSe(seqMapAllCounts, noOfFiles)
 	return seqMap
 }
 
@@ -119,6 +119,7 @@ func loadCfaFile(fileNames chan string, srnaMaps chan map[string]map[string]floa
 			headerLine := strings.Split(fastaLine, sep)
 			err := checkHeaderError(headerLine, fileName)
 			if err != nil {
+				fmt.Println("Read file format problem - header error in " + fileName)
 				errorShutdown()
 			}
 			count, err = strconv.ParseFloat(strings.Split(fastaLine, sep)[1], 32)
@@ -318,7 +319,7 @@ type meanSe struct {
 }
 
 // calcMeanSe calculates the mean and standard error for each slice of counts
-func calcMeanSe(seq_map_all_counts map[string]interface{}, no_of_files int, min_count float64) map[string]interface{} {
+func calcMeanSe(seq_map_all_counts map[string]interface{}, no_of_files int) map[string]interface{} {
 	seqMap := make(map[string]interface{})
 	sqrt := math.Sqrt(float64(no_of_files))
 	for srna := range seq_map_all_counts {
@@ -335,19 +336,19 @@ func calcMeanSe(seq_map_all_counts map[string]interface{}, no_of_files int, min_
 	return seqMap
 }
 
-// meanSe is a struct comprising a normalised mean and standard error for a read
-type headerRef struct {
-	header     string
-	seq        string
-	reverseSeq string
+// HeaderRef is a struct comprising a reference sequence header, seques and reverse complement
+type HeaderRef struct {
+	Header     string
+	Seq        string
+	ReverseSeq string
 }
 
 // RefLoad loads a reference sequence DNA file (FASTA format).
-// It returns a slice of headerRef structs (individual reference header, sequence and reverse complement).
-func RefLoad(refFile string) []*headerRef {
+// It returns a slice of HeaderRef structs (individual reference header, sequence and reverse complement).
+func RefLoad(refFile string) []*HeaderRef {
 	var totalLength int
-	var refSlice []*headerRef
-	var singleHeaderRef *headerRef
+	var refSlice []*HeaderRef
+	var singleHeaderRef *HeaderRef
 	var header string
 	var refSeq bytes.Buffer
 	f, err := os.Open(refFile)
@@ -362,7 +363,7 @@ func RefLoad(refFile string) []*headerRef {
 		switch {
 		case strings.HasPrefix(fastaLine, ">"):
 			seq := refSeq.String()
-			singleHeaderRef = &headerRef{header, seq, reverseComplement(seq)}
+			singleHeaderRef = &HeaderRef{header, seq, reverseComplement(seq)}
 			refSlice = append(refSlice, singleHeaderRef)
 			header = fastaLine[1:]
 			refSeq.Reset()
@@ -372,7 +373,7 @@ func RefLoad(refFile string) []*headerRef {
 		}
 	}
 	seq := refSeq.String()
-	singleHeaderRef = &headerRef{header, seq, reverseComplement(seq)}
+	singleHeaderRef = &HeaderRef{header, seq, reverseComplement(seq)}
 	refSlice = append(refSlice, singleHeaderRef)
 	refSlice = refSlice[1:]
 
