@@ -166,12 +166,12 @@ func profileSplitWorker(alignmentsForGoroutine chan alignmentStruct, outputFromG
 }
 
 //ProfileToCsv writes the  den results to a csv file
-func ProfileToCsv(profileAlignmentsMap map[string]interface{}, refSlice []*headerRef, nt int, outPrefix string, fileOrder []string) {
+func ProfileToCsv(profileAlignmentsMap map[string]interface{}, refSlice []*HeaderRef, nt int, outPrefix string, fileOrder []string) {
 
 	firstRow := true
 	var rows [][]string
 	for _, ref := range refSlice {
-		if alignments, ok := profileAlignmentsMap[ref.header]; ok {
+		if alignments, ok := profileAlignmentsMap[ref.Header]; ok {
 			for _, alignment := range *alignments.(*singleAlignments) {
 				switch v := alignment.Alignments.(type) {
 				case *meanSe:
@@ -181,7 +181,7 @@ func ProfileToCsv(profileAlignmentsMap map[string]interface{}, refSlice []*heade
 						}
 						firstRow = false
 					}
-					row := []string{ref.header, strconv.Itoa(len(ref.seq)),
+					row := []string{ref.Header, strconv.Itoa(len(ref.Seq)),
 						alignment.Seq, strconv.Itoa(alignment.Pos),
 						alignment.Strand,
 						strconv.FormatFloat(v.Mean, 'f', 3, 64),
@@ -196,7 +196,7 @@ func ProfileToCsv(profileAlignmentsMap map[string]interface{}, refSlice []*heade
 						firstRow = false
 					}
 
-					row := []string{ref.header, strconv.Itoa(len(ref.seq)),
+					row := []string{ref.Header, strconv.Itoa(len(ref.Seq)),
 						alignment.Seq, strconv.Itoa(alignment.Pos),
 						alignment.Strand, strconv.Itoa(alignment.timesAligned)}
 					pos := 0

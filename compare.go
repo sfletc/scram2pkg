@@ -276,10 +276,10 @@ func CompareToCsv(cdpAlignmentMap map[string]interface{}, nt int, outPrefix stri
 	}
 
 	outDir := filepath.Dir(outFile)
-	os.MkdirAll(outDir, 0777)
+	if err := os.MkdirAll(outDir, os.ModePerm); err != nil { fmt.Println("Not creating directory "+ outDir) }
 	f, err := os.Create(outFile)
 	if err != nil {
-		fmt.Println("Can't save to file")
+		fmt.Println("Can't create save directory/file "+ outFile)
 		errorShutdown()
 	}
 	w := csv.NewWriter(f)

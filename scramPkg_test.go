@@ -172,24 +172,24 @@ func TestSeqLoad_multi_minCount(t *testing.T) {
 
 func TestRefLoad(t *testing.T) {
 	test_ref := RefLoad("./test_data/test_ref.fa")
-	var should_be []*headerRef
-	ref1 := &headerRef{"ref_1", "AAAAAAAAAAAAAAAAAAAAAAAAA", "TTTTTTTTTTTTTTTTTTTTTTTTT"}
-	ref2 := &headerRef{"ref_2", "GGGGGGGGGGGGGGGGGGGGGGGGTAAAAAAAAAAAAAAAAAAAAAAAAG", "CTTTTTTTTTTTTTTTTTTTTTTTTACCCCCCCCCCCCCCCCCCCCCCCC"}
-	ref3 := &headerRef{"ref_3", "", ""}
+	var should_be []*HeaderRef
+	ref1 := &HeaderRef{"ref_1", "AAAAAAAAAAAAAAAAAAAAAAAAA", "TTTTTTTTTTTTTTTTTTTTTTTTT"}
+	ref2 := &HeaderRef{"ref_2", "GGGGGGGGGGGGGGGGGGGGGGGGTAAAAAAAAAAAAAAAAAAAAAAAAG", "CTTTTTTTTTTTTTTTTTTTTTTTTACCCCCCCCCCCCCCCCCCCCCCCC"}
+	ref3 := &HeaderRef{"ref_3", "", ""}
 	should_be = append(should_be, ref1, ref2, ref3)
 	fmt.Println(test_ref)
 	if len(test_ref) != len(should_be) {
 		t.Error("Wrong no of refs in test_ref.fa")
 	}
 	for i := 0; i < len(test_ref); i++ {
-		a := test_ref[i].header
-		b := should_be[i].header
+		a := test_ref[i].Header
+		b := should_be[i].Header
 		if a != b {
 			t.Error("Headers dont't match")
 		}
-		if test_ref[i].seq != should_be[i].seq {
-			fmt.Println(test_ref[i].seq)
-			fmt.Println(should_be[i].seq)
+		if test_ref[i].Seq != should_be[i].Seq {
+			fmt.Println(test_ref[i].Seq)
+			fmt.Println(should_be[i].Seq)
 			t.Error("Seqs dont't match")
 		}
 	}
